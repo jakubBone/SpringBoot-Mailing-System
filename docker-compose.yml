@@ -3,11 +3,11 @@ services:
     build: .
     container_name: version-info-service
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
-      SPRING_DATASOURCE_URL: $spring.datasource.url
-      SPRING_DATASOURCE_USERNAME: $spring.datasource.username
-      SPRING_DATASOURCE_PASSWORD: $spring.datasource.password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/spring_db
+      SPRING_DATASOURCE_USERNAME: spring_user
+      SPRING_DATASOURCE_PASSWORD: spring123
     depends_on:
       - db
 
@@ -15,11 +15,11 @@ services:
     image: postgres:15-alpine
     container_name: version-info-db
     environment:
-      - POSTGRES_DB=$spring.datasource.name
-      - POSTGRES_USER=$spring.datasource.username
-      - POSTGRES_PASSWORD=$spring.datasource.password
+      - POSTGRES_DB=spring_db
+      - POSTGRES_USER=spring_user
+      - POSTGRES_PASSWORD=spring123
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

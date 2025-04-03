@@ -11,7 +11,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api")
 public class InfoController {
-
     @Value("${spring.application.version}")
     private String version;
 
