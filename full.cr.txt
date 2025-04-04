@@ -1,4 +1,78 @@
 ====================
+FILE: ExchangeRequest.java
+
+package com.jakubbone.version_info_service.controller.domain.model;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@NoArgsConstructor // @NoArgsConstructor - Jackson requires no args constructor to create JSON request
+public class ExchangeRequest {
+    private BigDecimal amount;
+    private String from;
+    private String to;
+}
+
+====================
+FILE: ExchangeController.java
+
+package com.jakubbone.version_info_service.controller;
+
+import com.jakubbone.version_info_service.controller.domain.model.ExchangeRequest;
+import com.jakubbone.version_info_service.service.ExchangeService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.math.BigDecimal;
+
+@RestController // Informs Spring that this class will handle REST requests and return JSON responses
+@RequestMapping("api/currency") // Sets a common prefix for all endpoints in this controller
+public class ExchangeController {
+    private final ExchangeService service;
+
+    public ExchangeController(ExchangeService service) {
+        this.service = service;
+    }
+
+    /*
+     # Handles HTTP POST request for '/api/currency/exchange'
+     # Accepts input in JSON format (via @RequestBody).
+     # 'req CurrencyRequest' containing amount, source, and target currency
+      */
+    @PostMapping("/exchange")
+    public ResponseEntity<?> exchangeCurrency(@RequestBody ExchangeRequest req){
+        // @RequestBody maps the incoming JSON request body to a CurrencyRequest object
+        try{
+            BigDecimal result = service.exchange(req.getAmount(), req.getFrom(), req.getTo());
+            //Datasource datasource = new Datasource();
+            //ExchangeRepository repository = new ExchangeRepository(datasource);
+            //repository.createTable();
+            //repository.saveExchange(result, req.getFrom(), req.getTo());
+            return ResponseEntity.ok(result);
+        }
+        catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /*
+    ResponseEntity represents the full HTTP response:
+
+    # Status: e.g. 200 OK, 400 Bad Request, 404 Not Found
+    # Headers: additional response metadata
+    # Body: actual response content (e.g. result of conversion)
+     */
+}
+
+====================
 FILE: InfoController.java
 
 package com.jakubbone.version_info_service.controller;
@@ -24,6 +98,50 @@ public class InfoController {
 }
 
 ====================
+FILE: ExchangeService.java
+
+package com.jakubbone.version_info_service.service;
+
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.HashMap;
+import java.util.Map;
+
+@Service // Marks as a Spring service component
+public class ExchangeService {
+    private final Map<String, BigDecimal> currencyRates;
+
+    public ExchangeService() {
+        currencyRates = new HashMap<>();
+        currencyRates.put("USD", new BigDecimal("4.10"));
+        currencyRates.put("EUR", new BigDecimal("4.00"));
+        currencyRates.put("PLN", BigDecimal.ONE);
+    }
+
+    public BigDecimal exchange(BigDecimal amount, String from, String to){
+        if(from.equals(to)){
+            return amount;
+        }
+
+        BigDecimal fromCurrency = currencyRates.get(from);
+        BigDecimal toCurrency = currencyRates.get(to);
+
+        if(fromCurrency == null ||  toCurrency == null){
+            throw new IllegalArgumentException("unknown currency:" +
+                    (fromCurrency == null ? from: to ));
+        }
+
+        // Step 1: Convert from source currency to PLN
+        BigDecimal plnAmount = amount.multiply(currencyRates.get(from));
+
+        // Step 1: Divide by target rate to convert PLN to the target currency
+        return plnAmount.divide(currencyRates.get(to), 2, RoundingMode.HALF_UP);
+    }
+}
+
+====================
 FILE: VersionInfoServiceApplication.java
 
 package com.jakubbone.version_info_service;
@@ -39,7 +157,70 @@ public class VersionInfoServiceApplication {
 }
 
 ====================
-FILE: VersionInfoServiceApplicationTests.java
+FILE: ExchangeControllerTest.java
+
+package com.jakubbone.version_info_service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jakubbone.version_info_service.controller.domain.model.ExchangeRequest;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+
+import java.math.BigDecimal;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class ExchangeControllerTest {
+    @Autowired
+    MockMvc mockMvc;
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    @Test
+    void shouldReturnExchangedCurrency_whenValidInput() throws Exception {
+        //given
+        ExchangeRequest request = new ExchangeRequest();
+        request.setAmount(new BigDecimal("100"));
+        request.setFrom("EUR");
+        request.setTo("PLN");
+
+        // expected conversion 400.00
+        String expectedResponse = "400.00";
+
+        mockMvc.perform(post("/api/currency/exchange")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(request)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(content().string(expectedResponse));
+    }
+
+    @Test
+    void shouldReturnBedResponse_whenInvalidInput() throws Exception {
+        ExchangeRequest request = new ExchangeRequest();
+        request.setAmount(new BigDecimal("100"));
+        request.setFrom("INVALID");
+        request.setTo("PLN");
+
+        mockMvc.perform(post("/api/currency/exchange")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(request)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isBadRequest());
+    }
+}
+
+====================
+FILE: InfoControllerTests.java
 
 package com.jakubbone.version_info_service;
 
@@ -55,7 +236,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class VersionInfoServiceApplicationTests {
+class InfoControllerTests {
 
 	@Autowired
 	MockMvc mockMvc;
