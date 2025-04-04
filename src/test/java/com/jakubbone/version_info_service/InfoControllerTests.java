@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class VersionInfoServiceApplicationTests {
+class InfoControllerTests {
 
 	@Autowired
 	MockMvc mockMvc;

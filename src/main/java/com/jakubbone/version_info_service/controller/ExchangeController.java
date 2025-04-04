@@ -25,7 +25,7 @@ public class ExchangeController {
      # 'req CurrencyRequest' containing amount, source, and target currency
       */
     @PostMapping("/exchange")
-    public ResponseEntity<BigDecimal> exchangeCurrency(@RequestBody ExchangeRequest req){
+    public ResponseEntity<?> exchangeCurrency(@RequestBody ExchangeRequest req){
         // @RequestBody maps the incoming JSON request body to a CurrencyRequest object
         try{
             BigDecimal result = service.exchange(req.getAmount(), req.getFrom(), req.getTo());
@@ -36,7 +36,7 @@ public class ExchangeController {
             return ResponseEntity.ok(result);
         }
         catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
