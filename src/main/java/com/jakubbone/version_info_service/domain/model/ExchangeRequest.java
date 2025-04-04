@@ -1,4 +1,4 @@
-package com.jakubbone.version_info_service.controller.domain.model;
+package com.jakubbone.version_info_service.domain.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

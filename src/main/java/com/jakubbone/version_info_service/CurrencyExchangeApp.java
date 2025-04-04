@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class VersionInfoServiceApplication {
+public class CurrencyExchangeApp {
 	public static void main(String[] args) {
-		SpringApplication.run(VersionInfoServiceApplication.class, args);
+		SpringApplication.run(CurrencyExchangeApp.class, args);
 	}
 }
