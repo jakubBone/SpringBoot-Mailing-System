@@ -14,7 +14,7 @@ public class InfoController {
     @Value("${spring.application.version}")
     private String version;
 
-    private String uptime;
+    private Long uptime;
 
     @GetMapping("/info")
     public Map<String, String> getAppInfo(){
@@ -22,7 +22,7 @@ public class InfoController {
     }
 
     @GetMapping("/uptime")
-    public Map<String, String> getAppUptime(){
+    public Map<String, Long> getAppUptime(){
         return Collections.singletonMap("uptime", uptime);
     }
 }
