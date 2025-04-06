@@ -17,12 +17,12 @@ public class InfoController {
     private Long uptime;
 
     @GetMapping("/info")
-    public Map<String, String> getAppInfo(){
+    public Map<String, String> getVersion(){
         return Collections.singletonMap("version", version);
     }
 
     @GetMapping("/uptime")
-    public Map<String, Long> getAppUptime(){
+    public Map<String, Long> getUptime(){
         return Collections.singletonMap("uptime", uptime);
     }
 }
