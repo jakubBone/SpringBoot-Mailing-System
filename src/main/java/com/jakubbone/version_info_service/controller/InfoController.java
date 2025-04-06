@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.Map;
 
@@ -14,8 +15,6 @@ public class InfoController {
     @Value("${spring.application.version}")
     private String version;
 
-    private Long uptime;
-
     @GetMapping("/info")
     public Map<String, String> getVersion(){
         return Collections.singletonMap("version", version);
@@ -23,6 +22,8 @@ public class InfoController {
 
     @GetMapping("/uptime")
     public Map<String, Long> getUptime(){
-        return Collections.singletonMap("uptime", uptime);
+        long uptimeInMillis = ManagementFactory.getRuntimeMXBean().getUptime();
+        long uptimeInSeconds = uptimeInMillis / 1000;
+        return Collections.singletonMap("uptime", uptimeInSeconds);
     }
 }
