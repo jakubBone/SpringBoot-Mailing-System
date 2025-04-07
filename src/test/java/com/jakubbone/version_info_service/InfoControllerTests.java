@@ -10,6 +10,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 class InfoControllerTests {
@@ -28,6 +31,17 @@ class InfoControllerTests {
 				.andExpect(MockMvcResultMatchers.content().contentType(
 						"application/json"))
 				.andExpect(MockMvcResultMatchers.content().json("{\"version\":\"" + version + "\"}"));
+	}
+
+	@Test
+	void shouldReturnApplicationUptime() throws Exception {
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/uptime"))
+				.andDo(MockMvcResultHandlers.print())
+				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.content().contentType(
+						"application/json"))
+				.andExpect(jsonPath("$.uptime").isNumber())
+				.andExpect(jsonPath("$.uptime", greaterThanOrEqualTo(0)));
 	}
 
 }
