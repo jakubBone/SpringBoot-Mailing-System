@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.jakubbone</groupId>
-	<artifactId>version-info-service</artifactId>
+	<artifactId>currency-exchange-app</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>VersionInfoService</name>
+	<name>CurrencyExchangeApp</name>
 	<description> Spring Boot application with PostgreSQL and Docker Compose for managing versions with SemVe</description>
 	<url/>
 	<licenses>
