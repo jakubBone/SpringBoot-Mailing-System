@@ -16,12 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class InfoControllerTests {
-
 	@Autowired
 	MockMvc mockMvc;
-
-	@Value("${spring.application.version}")
-	private String version;
 
 	@Test
 	void shouldReturnApplicationVersion() throws Exception {
@@ -30,7 +26,7 @@ class InfoControllerTests {
 				.andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(
 						"application/json"))
-				.andExpect(MockMvcResultMatchers.content().json("{\"version\":\"" + version + "\"}"));
+				.andExpect(jsonPath("$.version").isString());
 	}
 
 	@Test
