@@ -1,4 +1,4 @@
-package com.jakubbone.version_info_service.service;
+package com.jakubbone.service;
 
 import org.springframework.stereotype.Service;
 

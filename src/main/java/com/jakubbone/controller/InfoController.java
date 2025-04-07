@@ -1,4 +1,4 @@
-package com.jakubbone.version_info_service.controller;
+package com.jakubbone.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;

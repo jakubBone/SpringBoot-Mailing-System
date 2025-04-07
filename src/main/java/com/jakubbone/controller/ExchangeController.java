@@ -1,7 +1,7 @@
-package com.jakubbone.version_info_service.controller;
+package com.jakubbone.controller;
 
-import com.jakubbone.version_info_service.domain.model.ExchangeRequest;
-import com.jakubbone.version_info_service.service.ExchangeService;
+import com.jakubbone.domain.model.ExchangeRequest;
+import com.jakubbone.service.ExchangeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
