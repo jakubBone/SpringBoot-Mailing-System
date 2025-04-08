@@ -1,4 +1,4 @@
-package com.jakubbone.version_info_service;
+package com.jakubbone.version_info_service.unit;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

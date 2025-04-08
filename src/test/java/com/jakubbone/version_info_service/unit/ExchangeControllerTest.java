@@ -1,4 +1,4 @@
-package com.jakubbone.version_info_service;
+package com.jakubbone.version_info_service.unit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jakubbone.domain.model.ExchangeRequest;
@@ -26,9 +26,9 @@ public class ExchangeControllerTest {
     ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    void shouldReturnExchangedCurrency_whenValidInput(@Autowired MockMvc mockMvc) throws Exception {
+    void shouldReturnOkResponse_whenValidInput(@Autowired MockMvc mockMvc) throws Exception {
         ExchangeRequest req = new ExchangeRequest();
-        req.setAmount(new BigDecimal("100"));
+        req.setAmount(new BigDecimal("100.00"));
         req.setFrom("EUR");
         req.setTo("PLN");
 
@@ -43,7 +43,7 @@ public class ExchangeControllerTest {
     void shouldReturnBadResponse_whenMissingField(@Autowired MockMvc mockMvc) throws Exception {
         // Request with missing 'from' field
         ExchangeRequest req = new ExchangeRequest();
-        req.setAmount(new BigDecimal("100"));
+        req.setAmount(new BigDecimal("100.00"));
         req.setTo("PLN");
 
         mockMvc.perform(post("/api/currency/exchange")

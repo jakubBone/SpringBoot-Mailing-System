@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @RestController // Informs Spring that this class will handle REST requests and return JSON responses
 @RequestMapping("api/currency") // Sets a common prefix for all endpoints in this controller
@@ -33,10 +34,10 @@ public class ExchangeController {
                 return ResponseEntity.badRequest().body("Invalid request: amount/from/to must are required");
             }
             BigDecimal result = service.exchange(req.getAmount(), req.getFrom(), req.getTo());
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(Map.of("result", result));
         }
         catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Unsupported currency"));
         }
     }
 
