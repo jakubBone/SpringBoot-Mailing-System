@@ -28,11 +28,11 @@ public class ExchangeController {
     public ResponseEntity<?> exchangeCurrency(@RequestBody ExchangeRequest req){
         // @RequestBody maps the incoming JSON request body to a CurrencyRequest object
         try{
+            if(req.getAmount() == null || req.getFrom() == null || req.getTo() == null ||
+                    req.getFrom().isBlank() || req.getTo().isBlank() ){
+                return ResponseEntity.badRequest().body("Invalid request: amount/from/to must are required");
+            }
             BigDecimal result = service.exchange(req.getAmount(), req.getFrom(), req.getTo());
-            //Datasource datasource = new Datasource();
-            //ExchangeRepository repository = new ExchangeRepository(datasource);
-            //repository.createTable();
-            //repository.saveExchange(result, req.getFrom(), req.getTo());
             return ResponseEntity.ok(result);
         }
         catch (IllegalArgumentException e) {
