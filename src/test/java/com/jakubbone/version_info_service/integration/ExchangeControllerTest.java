@@ -18,8 +18,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class ExchangeControllerIntegrationTest {
+public class ExchangeControllerTest {
     ObjectMapper mapper = new ObjectMapper();
+
+    @Test
+    void shouldReturnOkStatus_whenValidInput(@Autowired MockMvc mockMvc) throws Exception {
+        ExchangeRequest req = new ExchangeRequest();
+        req.setAmount(new BigDecimal("100.00"));
+        req.setFrom("EUR");
+        req.setTo("PLN");
+
+        mockMvc.perform(post("/api/currency/exchange")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturnBadResponseStatus_whenMissingField(@Autowired MockMvc mockMvc) throws Exception {
+        // Request with missing 'from' field
+        ExchangeRequest req = new ExchangeRequest();
+        req.setAmount(new BigDecimal("100.00"));
+        req.setTo("PLN");
+
+        mockMvc.perform(post("/api/currency/exchange")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isBadRequest());
+    }
 
     @Test
     void shouldReturnExchangedValue_whenValidInput(@Autowired MockMvc mockMvc) throws Exception {
@@ -38,7 +66,7 @@ public class ExchangeControllerIntegrationTest {
     }
 
     @Test
-    void shouldReturnBadResponse_whenMissingField(@Autowired MockMvc mockMvc) throws Exception {
+    void shouldReturnInvalidRequest_whenMissingField(@Autowired MockMvc mockMvc) throws Exception {
         // Request with missing 'from' field
         ExchangeRequest req = new ExchangeRequest();
         req.setAmount(new BigDecimal("100"));
@@ -53,7 +81,7 @@ public class ExchangeControllerIntegrationTest {
     }
 
     @Test
-    void shouldReturnBadResponse_whenUnsupportedCurrency(@Autowired MockMvc mockMvc) throws Exception {
+    void shouldReturnError_whenUnsupportedCurrency(@Autowired MockMvc mockMvc) throws Exception {
         // Request with unsupported currency
         ExchangeRequest req = new ExchangeRequest();
         req.setAmount(new BigDecimal("100"));
@@ -67,6 +95,5 @@ public class ExchangeControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("Unsupported currency"));
-
     }
 }

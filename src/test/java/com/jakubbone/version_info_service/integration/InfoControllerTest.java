@@ -1,4 +1,4 @@
-package com.jakubbone.version_info_service.unit;
+package com.jakubbone.version_info_service.integration;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class InfoControllerUnitTest {
+class InfoControllerTest {
 	@Autowired
 	MockMvc mockMvc;
 
@@ -38,5 +38,4 @@ class InfoControllerUnitTest {
 				.andExpect(jsonPath("$.uptime").isNumber())
 				.andExpect(jsonPath("$.uptime", greaterThanOrEqualTo(0)));
 	}
-
 }
