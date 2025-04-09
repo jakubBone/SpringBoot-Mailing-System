@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+// SpringBootTest except WebMvcTest -> server running required for exchange value response
 @SpringBootTest
 @AutoConfigureMockMvc
 class ExchangeControllerTest {
