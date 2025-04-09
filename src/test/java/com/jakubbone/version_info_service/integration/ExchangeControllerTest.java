@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class ExchangeControllerTest {
+class ExchangeControllerTest {
     ObjectMapper mapper = new ObjectMapper();
 
     @Test
@@ -56,7 +56,7 @@ public class ExchangeControllerTest {
         req.setFrom("EUR");
         req.setTo("PLN");
 
-        // Expected conversion 400.00
+        // Expected conversion = 400.00
         mockMvc.perform(post("/api/currency/exchange")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
@@ -77,7 +77,7 @@ public class ExchangeControllerTest {
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Invalid request: amount/from/to must are required"));
+                .andExpect(content().string("message: amount/from/to must are required"));
     }
 
     @Test
@@ -94,6 +94,6 @@ public class ExchangeControllerTest {
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.error").value("Unsupported currency"));
+                .andExpect(jsonPath("$.error").value("unsupported currency"));
     }
 }

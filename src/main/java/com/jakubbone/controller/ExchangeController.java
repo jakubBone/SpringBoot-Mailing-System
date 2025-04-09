@@ -1,5 +1,6 @@
 package com.jakubbone.controller;
 
+import com.jakubbone.exception.UnsupportedCurrencyException;
 import com.jakubbone.domain.model.ExchangeRequest;
 import com.jakubbone.service.ExchangeService;
 import org.springframework.http.ResponseEntity;
@@ -31,13 +32,13 @@ public class ExchangeController {
         try{
             if(req.getAmount() == null || req.getFrom() == null || req.getTo() == null ||
                     req.getFrom().isBlank() || req.getTo().isBlank() ){
-                return ResponseEntity.badRequest().body("Invalid request: amount/from/to must are required");
+                return ResponseEntity.badRequest().body("message: amount/from/to must are required");
             }
             BigDecimal result = service.exchange(req.getAmount(), req.getFrom(), req.getTo());
             return ResponseEntity.ok(Map.of("result", result));
         }
-        catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Unsupported currency"));
+        catch (UnsupportedCurrencyException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "unsupported currency"));
         }
     }
 

@@ -1,5 +1,6 @@
 package com.jakubbone.service;
 
+import com.jakubbone.exception.UnsupportedCurrencyException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -27,8 +28,7 @@ public class ExchangeService {
         BigDecimal toCurrency = currencyRates.get(to);
 
         if(fromCurrency == null ||  toCurrency == null){
-            throw new IllegalArgumentException("unknown currency:" +
-                    (fromCurrency == null ? from: to ));
+            throw new UnsupportedCurrencyException(fromCurrency == null ? from : to);
         }
 
         // Step 1: Convert from source currency to PLN
