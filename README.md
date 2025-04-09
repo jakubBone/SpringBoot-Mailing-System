@@ -17,3 +17,8 @@ I learn the fundamentals of Spring Boot, dependency injection, and REST API deve
 - Hibernate (JPA)- ORM for database operations
 - PostgreSQL  - robust relational database
 - Maven - buid and dependency management tool
+
+## 🧪 Testing Stack
+- JUnit 5 – unit and integration testing
+- Spring Boot Test – full application context for integration tests
+- MockMvc – simulates HTTP requests to REST controllers
