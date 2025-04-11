@@ -48,8 +48,8 @@ public class LoginController {
 
         return ResponseEntity.status(HttpStatus.OK).body("OK testing response");
 
-        //String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole());
-        //Map<String, String> responseBody = Collections.singletonMap("token", token);
-        //return ResponseEntity.ok(responseBody);
+        /*String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole());
+        Map<String, String> responseBody = Collections.singletonMap("token", token);
+        return ResponseEntity.ok(responseBody);*/
     }
 }
