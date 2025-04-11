@@ -1,7 +1,7 @@
 package com.jakubbone.controller;
 
 import com.jakubbone.exception.UnsupportedCurrencyException;
-import com.jakubbone.domain.model.ExchangeRequest;
+import com.jakubbone.dto.ExchangeRequest;
 import com.jakubbone.service.ExchangeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -1,4 +1,4 @@
-package com.jakubbone.domain.model;
+package com.jakubbone.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

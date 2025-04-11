@@ -1,6 +1,6 @@
 package com.jakubbone.reposotory;
 
-import com.jakubbone.domain.model.User;
+import com.jakubbone.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
