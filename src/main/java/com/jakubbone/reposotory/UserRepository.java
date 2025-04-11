@@ -9,5 +9,5 @@ import java.util.Optional;
 // e.g. save(), findById(), findAll(), delete()
 // for User Entity with the key type Long
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUsername(String username)
+    Optional<User> findByUsername(String username);
 }

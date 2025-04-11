@@ -1,5 +1,6 @@
 package com.jakubbone;
 
+import com.jakubbone.reposotory.UserRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

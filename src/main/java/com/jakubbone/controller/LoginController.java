@@ -3,6 +3,7 @@ package com.jakubbone.controller;
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
 import com.jakubbone.reposotory.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,14 +20,18 @@ import java.util.Optional;
 @RestController
 @RequestMapping("api/")
 public class LoginController {
+    private final PasswordEncoder encoder;
+    private final UserRepository userRepository;
 
-    private PasswordEncoder encoder;
-    private UserRepository userRepository;
+    public LoginController(PasswordEncoder encoder, UserRepository userRepository) {
+        this.encoder = encoder;
+        this.userRepository = userRepository;
+    }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        String username = loginRequest.getUsername();
-        String password = loginRequest.getPassword();
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+        String username = req.getUsername();
+        String password = req.getPassword();
 
         Optional<User> userOpt = userRepository.findByUsername(username);
 
@@ -40,6 +45,8 @@ public class LoginController {
         if (!encoder.matches(password, user.getPasswordHash())){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
+
+        return ResponseEntity.status(HttpStatus.OK).body("OK testing response");
 
         //String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole());
         //Map<String, String> responseBody = Collections.singletonMap("token", token);
