@@ -6,9 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 
 @SpringBootApplication
-public class CurrencyExchangeApp {
+public class ClientServiceApp {
 	public static void main(String[] args) {
 		EnvConfigLoader.loadEnvVariables();
-		SpringApplication.run(CurrencyExchangeApp.class, args);
+		SpringApplication.run(ClientServiceApp.class, args);
 	}
 }
