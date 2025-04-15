@@ -2,12 +2,14 @@ package com.jakubbone.utils;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
 @Component
+@Getter
 public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String secretKey;
