@@ -42,9 +42,11 @@ public class LoginController {
         }
 
         User user = userOpt.get();
+
         if (!encoder.matches(password, user.getPasswordHash())){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
+
 
         /*String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole());
         Map<String, String> responseBody = Collections.singletonMap("token", token);

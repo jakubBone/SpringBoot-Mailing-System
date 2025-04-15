@@ -9,8 +9,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
@@ -30,6 +32,12 @@ public class JwtFilter extends OncePerRequestFilter {
                         .setSigningKey(jwtTokenProvider.getSecretKey())
                         .parseClaimsJws(token)
                         .getBody();
+
+                String role = claims.get("role", String.class);
+                if(!"ADMIN".equals(role)){
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin role required");
+                }
+
             } catch (JwtException | IllegalArgumentException e) {
                 // Uncorrected or expired token
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
