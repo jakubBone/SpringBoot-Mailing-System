@@ -19,7 +19,7 @@ public class JwtTokenProvider {
 
     public String createToken(String username, String role){
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() - expirationMillis);
+        Date expiryDate = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
                 .setSubject(username)         // set token subject (username)
