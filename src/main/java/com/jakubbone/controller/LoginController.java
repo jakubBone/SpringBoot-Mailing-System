@@ -6,7 +6,7 @@ import com.jakubbone.reposotory.UserRepository;
 import com.jakubbone.utils.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,11 +19,9 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("api/")
-@PreAuthorize("hasRole('ADMIN')")
 public class LoginController {
     private final PasswordEncoder encoder;
     private final UserRepository userRepository;
-
     private final JwtTokenProvider jwtTokenProvider;
 
     public LoginController(PasswordEncoder encoder, UserRepository userRepository, JwtTokenProvider tokenProvider) {
