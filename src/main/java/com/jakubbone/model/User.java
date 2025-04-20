@@ -10,7 +10,6 @@ import lombok.Setter;
 @Table(name = "users")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor // JPA/Hibernate require to create object getting from DB
 public class User {
 

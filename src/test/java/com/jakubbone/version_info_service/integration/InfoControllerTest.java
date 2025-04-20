@@ -13,7 +13,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false) // required because WebMvcTest loads Spring Security configuration
+@AutoConfigureMockMvc(addFilters = false) // required because SpringBootTest loads Spring Security configuration
 class InfoControllerTest {
 	@Test
 	void shouldReturnApplicationVersion(@Autowired MockMvc mockMvc) throws Exception {
