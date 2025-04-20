@@ -29,4 +29,10 @@ public class User {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING) // Hibernate save as a String, not a number
     private Role role;
+
+    public User(String username, String passwordHash, String role) {
+        this.username = username;
+        this.passwordHash = passwordHash;
+        this.role = Role.valueOf(role);
+    }
 }
