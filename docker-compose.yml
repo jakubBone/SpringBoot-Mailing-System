@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: version-info-service
+    container_name: spring-boot-mailing-system
     ports:
       - "8080:8080"
     environment:
@@ -13,7 +13,7 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: version-info-db
+    container_name: spring-boot-mailing-system-db
     environment:
       POSTGRES_DB: spring_db
       POSTGRES_USER: spring_user
