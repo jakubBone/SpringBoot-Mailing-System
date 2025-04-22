@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.jakubbone</groupId>
-	<artifactId>currency-exchange-app</artifactId>
+	<artifactId>spring-boot-mailing-system</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>CurrencyExchangeApp</name>
-	<description> Spring Boot application with PostgreSQL and Docker Compose for managing versions with SemVe</description>
+	<name>SpringBootMailingSystem</name>
+	<description> Spring Boot application developed to strengthen skills in Spring Boot, Hibernate, RESTful API design, and dependency injection</description>
 	<url/>
 	<licenses>
 		<license/>
