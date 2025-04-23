@@ -125,7 +125,7 @@ mvn clean test
 
 ## 📈 Application Endpoints
 
-- `/api/login` – authentication and JWT token generation
+- `/api/login` – login, authentication and JWT token generation
 - `/api/info` – returns the current application version
 - `/api/uptime` – returns application uptime in seconds
 
