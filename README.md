@@ -7,24 +7,26 @@ and implementing user authentication using JWT. The application leverages Postgr
 
 ## 📖 Features
 
-- **JWT Authentication**: user login and JWT token generation
 - **User Management**: creating users and assigning roles (ADMIN, USER)
+- **JWT Authentication**: user login and JWT token generation
 - **REST API**: Provides endpoints for core application functionality 
 - **Database Integration**: PostgreSQL for production, H2 for testing
 - **Automatic Database Migrations**: managing database schema changes using Flyway
 - **Environment Configuration**: utilization of .env file
 
 
-## 🚀 Technologies Used
+## 🚀 Technologies & Libraries Used
 
-- Java 
-- Spring Boot 
+- Java 21
+- Spring Boot 3.4.4.
+- Spring MVC (Web)
 - Spring Security
+- Spring Data JPA
 - Hibernate / JPA
-- JWT (jjwt)
-- Flyway
 - PostgreSQL & H2 Database
-- Dotenv (dotenv-java)
+- JWT
+- Flyway
+- Spring Dotenv
 - Lombok
 - BCrypt (password encryption)
 - Docker & Docker Compose
@@ -48,8 +50,8 @@ and implementing user authentication using JWT. The application leverages Postgr
 │   │   │   ├── dto            # Data transfer objects
 │   │   │   ├── model          # JPA entity models
 │   │   │   ├── repository     # JPA repositories
-│   │   │   └── utils          # Utilities (JWT, loading .env)
-│   │   └── resources          # Application configuration files
+│   │   │   └── utils          # Utilities (JWT)
+│   │   └── resources          
 │   │       ├── db/migration   # Flyway migrations scripts (PostgreSQL and H2)
 │   │       ├── application.properties
 │   │       └── application-test.properties
@@ -128,16 +130,10 @@ mvn clean test
 - `/api/uptime` – returns application uptime in seconds
 
 
-## 📦 Building and Publishing with Docker
+## 📦 Building with Docker
 
-Building a Docker image:
-
-```bash
-docker build -t currency-exchange-app .
-```
-
-Running the application using Docker Compose:
+Build nad run the application:
 
 ```bash
-docker-compose up
+docker-compose up --build
 ```
