@@ -1,57 +1,66 @@
 ====================
-FILE: ExchangeController.java
+FILE: FlywayConfig.java
 
-package com.jakubbone.controller;
+package com.jakubbone.config;
 
-import com.jakubbone.exception.UnsupportedCurrencyException;
-import com.jakubbone.dto.ExchangeRequest;
-import com.jakubbone.service.ExchangeService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import java.math.BigDecimal;
-import java.util.Map;
+@Configuration
+public class FlywayConfig {
+    @Bean
+    public FlywayMigrationStrategy cleanMigrateStrategy() {
+        return flyway -> {
+            flyway.clean();    // delete entire schema and history
+            flyway.migrate();  // start V1, V2…
+        };
+    }
+}
 
-@RestController // Informs Spring that this class will handle REST requests and return JSON responses
-@RequestMapping("api/currency") // Sets a common prefix for all endpoints in this controller
-public class ExchangeController {
-    private final ExchangeService service;
+====================
+FILE: SecurityConfig.java
 
-    public ExchangeController(ExchangeService service) {
-        this.service = service;
+package com.jakubbone.config;
+
+import com.jakubbone.utils.JwtTokenFilter;
+import com.jakubbone.utils.JwtTokenProvider;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    private JwtTokenProvider jwtTokenProvider;
+
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    /*
-     # Handles HTTP POST request for '/api/currency/exchange'
-     # Accepts input in JSON format (via @RequestBody).
-     # 'req CurrencyRequest' containing amount, source, and target currency
-      */
-    @PostMapping("/exchange")
-    public ResponseEntity<?> exchangeCurrency(@RequestBody ExchangeRequest req){
-        // @RequestBody maps the incoming JSON request body to a CurrencyRequest object
-        try{
-            if(req.getAmount() == null || req.getFrom() == null || req.getTo() == null ||
-                    req.getFrom().isBlank() || req.getTo().isBlank() ){
-                return ResponseEntity.badRequest().body("message: amount/from/to must are required");
-            }
-            BigDecimal result = service.exchange(req.getAmount(), req.getFrom(), req.getTo());
-            return ResponseEntity.ok(Map.of("result", result));
-        }
-        catch (UnsupportedCurrencyException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "unsupported currency"));
-        }
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/login").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+        return http.build();
     }
 
-    /*
-    ResponseEntity represents the full HTTP response:
-
-    # Status: e.g. 200 OK, 400 Bad Request, 404 Not Found
-    # Headers: additional response metadata
-    # Body: actual response content (e.g. result of conversion)
-     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }
 
 ====================
@@ -88,196 +97,248 @@ public class InfoController {
 }
 
 ====================
-FILE: CurrencyExchangeApp.java
+FILE: LoginController.java
+
+package com.jakubbone.controller;
+
+import com.jakubbone.dto.LoginRequest;
+import com.jakubbone.model.User;
+import com.jakubbone.reposotory.UserRepository;
+import com.jakubbone.utils.JwtTokenProvider;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("api/")
+public class LoginController {
+    private final PasswordEncoder encoder;
+    private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    public LoginController(PasswordEncoder encoder, UserRepository userRepository, JwtTokenProvider tokenProvider) {
+        this.encoder = encoder;
+        this.userRepository = userRepository;
+        this.jwtTokenProvider = tokenProvider;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+        String username = req.getUsername();
+        String password = req.getPassword();
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+
+        if (userOpt.isEmpty()){
+            // Return a generic HTTP 401 Unauthorized response without specifying
+            // whether the username or the password is incorrect
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        }
+
+        User user = userOpt.get();
+
+        if (!encoder.matches(password, user.getPasswordHash())){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        }
+
+        String token = jwtTokenProvider.createToken(user.getUsername(), String.valueOf(user.getRole()));
+        Map<String, String> responseBody = Collections.singletonMap("token", token);
+        return ResponseEntity.ok(responseBody);
+    }
+}
+
+====================
+FILE: LoginRequest.java
+
+package com.jakubbone.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor // @NoArgsConstructor - Jackson requires no args constructor to create JSON request
+public class LoginRequest {
+    private String username;
+    private String password;
+}
+
+====================
+FILE: MailingApp.java
 
 package com.jakubbone;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+
 @SpringBootApplication
-public class CurrencyExchangeApp {
+public class MailingApp {
 	public static void main(String[] args) {
-		SpringApplication.run(CurrencyExchangeApp.class, args);
+		SpringApplication.run(MailingApp.class, args);
 	}
 }
 
 ====================
-FILE: ExchangeRequest.java
+FILE: User.java
 
-package com.jakubbone.domain.model;
+package com.jakubbone.model;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-
+@Entity
+@Table(name = "users")
 @Getter
 @Setter
-@NoArgsConstructor // @NoArgsConstructor - Jackson requires no args constructor to create JSON request
-public class ExchangeRequest {
-    private BigDecimal amount;
-    private String from;
-    private String to;
-}
+@NoArgsConstructor // JPA/Hibernate require to create object getting from DB
+public class User {
 
-====================
-FILE: UnsupportedCurrencyException.java
+    enum Role { USER, ADMIN }
 
-package com.jakubbone.exception;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
 
-public class UnsupportedCurrencyException extends RuntimeException {
-    public UnsupportedCurrencyException(String currency) {
-        super("unknown currency: " + currency);
+    @Column(nullable = false, unique = true)
+    private String username;
+
+    @Column(nullable = false)
+    private String passwordHash;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING) // Hibernate save as a String, not a number
+    private Role role;
+
+    public User(String username, String passwordHash, String role) {
+        this.username = username;
+        this.passwordHash = passwordHash;
+        this.role = Role.valueOf(role);
     }
 }
 
 ====================
-FILE: ExchangeService.java
+FILE: UserRepository.java
 
-package com.jakubbone.service;
+package com.jakubbone.reposotory;
 
-import com.jakubbone.exception.UnsupportedCurrencyException;
-import org.springframework.stereotype.Service;
+import com.jakubbone.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
-@Service // Marks as a Spring service component
-public class ExchangeService {
-    private final Map<String, BigDecimal> currencyRates;
+// JPARepository provides the ready methods
+// e.g. save(), findById(), findAll(), delete()
+// for User Entity with the key type Long
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username);
+}
 
-    public ExchangeService() {
-        currencyRates = new HashMap<>();
-        currencyRates.put("USD", new BigDecimal("4.10"));
-        currencyRates.put("EUR", new BigDecimal("4.00"));
-        currencyRates.put("PLN", BigDecimal.ONE);
+====================
+FILE: JwtTokenFilter.java
+
+package com.jakubbone.utils;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
+
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class JwtTokenFilter extends OncePerRequestFilter {
+    private JwtTokenProvider jwtTokenProvider;
+
+    public JwtTokenFilter(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    public BigDecimal exchange(BigDecimal amount, String from, String to){
-        if(from.equals(to)){
-            return amount;
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                // Token validation
+                Claims claims = Jwts.parser()
+                        .setSigningKey(jwtTokenProvider.getSecretKey())
+                        .parseClaimsJws(token)
+                        .getBody();
+
+                String role = claims.get("role", String.class);
+                if(!"ADMIN".equals(role)){
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin role required");
+                }
+
+            } catch (JwtException | IllegalArgumentException e) {
+                // Uncorrected or expired token
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
+                return;
+            }
         }
-
-        BigDecimal fromCurrency = currencyRates.get(from);
-        BigDecimal toCurrency = currencyRates.get(to);
-
-        if(fromCurrency == null ||  toCurrency == null){
-            throw new UnsupportedCurrencyException(fromCurrency == null ? from : to);
-        }
-
-        // Step 1: Convert from source currency to PLN
-        BigDecimal plnAmount = amount.multiply(currencyRates.get(from));
-
-        // Step 1: Divide by target rate to convert PLN to the target currency
-        return plnAmount.divide(currencyRates.get(to), 2, RoundingMode.HALF_UP);
+        filterChain.doFilter(request, response);
     }
 }
 
 ====================
-FILE: ExchangeControllerTest.java
+FILE: JwtTokenProvider.java
 
-package com.jakubbone.version_info_service.integration;
+package com.jakubbone.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jakubbone.dto.ExchangeRequest;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import java.util.Date;
 
-import java.math.BigDecimal;
+@Component
+@Getter
+public class JwtTokenProvider {
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+    @Value("${jwt.expiration}")
+    private long expirationMillis;
 
-// SpringBootTest except WebMvcTest -> server running required for exchange value response
-@SpringBootTest
-@AutoConfigureMockMvc
-class ExchangeControllerTest {
-    ObjectMapper mapper = new ObjectMapper();
+    public String createToken(String username, String role){
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expirationMillis);
 
-    @Test
-    void shouldReturnOkStatus_whenValidInput(@Autowired MockMvc mockMvc) throws Exception {
-        ExchangeRequest req = new ExchangeRequest();
-        req.setAmount(new BigDecimal("100.00"));
-        req.setFrom("EUR");
-        req.setTo("PLN");
-
-        mockMvc.perform(post("/api/currency/exchange")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsBytes(req)))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void shouldReturnBadResponseStatus_whenMissingField(@Autowired MockMvc mockMvc) throws Exception {
-        // Request with missing 'from' field
-        ExchangeRequest req = new ExchangeRequest();
-        req.setAmount(new BigDecimal("100.00"));
-        req.setTo("PLN");
-
-        mockMvc.perform(post("/api/currency/exchange")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsBytes(req)))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void shouldReturnExchangedValue_whenValidInput(@Autowired MockMvc mockMvc) throws Exception {
-        ExchangeRequest req = new ExchangeRequest();
-        req.setAmount(new BigDecimal("100.00"));
-        req.setFrom("EUR");
-        req.setTo("PLN");
-
-        // Expected conversion = 400.00
-        mockMvc.perform(post("/api/currency/exchange")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsBytes(req)))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result").value("400.0"));
-    }
-
-    @Test
-    void shouldReturnInvalidRequest_whenMissingField(@Autowired MockMvc mockMvc) throws Exception {
-        // Request with missing 'from' field
-        ExchangeRequest req = new ExchangeRequest();
-        req.setAmount(new BigDecimal("100"));
-        req.setTo("PLN");
-
-        mockMvc.perform(post("/api/currency/exchange")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsBytes(req)))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("message: amount/from/to must are required"));
-    }
-
-    @Test
-    void shouldReturnError_whenUnsupportedCurrency(@Autowired MockMvc mockMvc) throws Exception {
-        // Request with unsupported currency
-        ExchangeRequest req = new ExchangeRequest();
-        req.setAmount(new BigDecimal("100"));
-        req.setFrom("NON-EXISTENT");
-        req.setTo("PLN");
-
-        mockMvc.perform(post("/api/currency/exchange")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsBytes(req)))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.error").value("unsupported currency"));
+        return Jwts.builder()
+                .setSubject(username)         // set token subject (username)
+                .claim("role", role)       // own field (role)
+                .setIssuedAt(now)             // release time
+                .setExpiration(expiryDate)    // expiration time
+                .signWith(SignatureAlgorithm.HS512, secretKey)  // sign with HS512 algorithm and secret
+                .compact();
     }
 }
 
@@ -286,10 +347,10 @@ FILE: InfoControllerTest.java
 
 package com.jakubbone.version_info_service.integration;
 
-import com.jakubbone.controller.InfoController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
@@ -298,8 +359,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-// @WebMvcTest -> server running no required for response properties testing
-@WebMvcTest(InfoController.class)
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false) // required because SpringBootTest loads Spring Security configuration
 class InfoControllerTest {
 	@Test
 	void shouldReturnApplicationVersion(@Autowired MockMvc mockMvc) throws Exception {
@@ -324,50 +385,182 @@ class InfoControllerTest {
 }
 
 ====================
-FILE: ExchangeServiceTest.java
+FILE: LoginControllerTest.java
+
+package com.jakubbone.version_info_service.integration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.jakubbone.dto.LoginRequest;
+import com.jakubbone.model.User;
+import com.jakubbone.reposotory.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@ActiveProfiles("test") // set h2 profile; test uses application-test.properties
+@SpringBootTest // @SpringBootTest runs all components with all Spring configuration
+@AutoConfigureMockMvc
+class LoginControllerTest {
+    ObjectMapper mapper = new ObjectMapper();
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    void setup() {
+        userRepository.deleteAll();
+        User testUser = new User("testUser", passwordEncoder.encode("testPassword"), "USER");
+        userRepository.save(testUser);
+    }
+
+    @Test
+    void shouldReturn401_whenPasswordIncorrect(@Autowired MockMvc mockMvc) throws Exception {
+        LoginRequest req = new LoginRequest();
+        req.setUsername("testUser");
+        req.setPassword("incorrectPassword");
+
+        mockMvc.perform(post("/api/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturn401_whenUsernameIncorrect(@Autowired MockMvc mockMvc) throws Exception {
+        LoginRequest req = new LoginRequest();
+        req.setUsername("incorrectUsername");
+        req.setUsername("testPassword");
+
+        mockMvc.perform(post("/api/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturnOk_CredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
+        LoginRequest req = new LoginRequest();
+        req.setUsername("testUser");
+        req.setPassword("testPassword");
+
+        mockMvc.perform(post("/api/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturnToken_CredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
+        LoginRequest req = new LoginRequest();
+        req.setUsername("testUser");
+        req.setPassword("testPassword");
+
+        mockMvc.perform(post("/api/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists());
+    }
+}
+
+====================
+FILE: LoginControllerTest.java
 
 package com.jakubbone.version_info_service.unit;
 
-import com.jakubbone.exception.UnsupportedCurrencyException;
-import com.jakubbone.service.ExchangeService;
+import com.jakubbone.controller.LoginController;
+import com.jakubbone.dto.LoginRequest;
+import com.jakubbone.model.User;
+import com.jakubbone.reposotory.UserRepository;
+import com.jakubbone.utils.JwtTokenProvider;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
-class ExchangeServiceTest {
+@ExtendWith(MockitoExtension.class)
+public class LoginControllerTest {
 
-    ExchangeService service = new ExchangeService();
+    @InjectMocks
+    LoginController loginController;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
 
     @Test
-    void shouldReturnUnchangedCurrency_whenCurrencySame(){
-        BigDecimal amount = new BigDecimal("100.00");
+    void shouldReturnToken_whenLoginSuccess_ReturnsToken() {
+        LoginRequest req = new LoginRequest("alice", "password123");
+        User user = new User("alice", "testHashedPassword", "USER");
 
-        BigDecimal result = service.exchange(amount, "PLN", "PLN");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", user.getPasswordHash())).thenReturn(true);
+        when(jwtTokenProvider.createToken("alice", "USER")).thenReturn("fake-jwt-token");
 
-        assertEquals(amount, result);
+        ResponseEntity <?> resp = loginController.login(req);
+        Map respBody = (Map) resp.getBody();
+
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertEquals("fake-jwt-token", respBody.get("token"));
     }
 
     @Test
-    void shouldReturnExchangedCurrency_whenCurrencyDifferent(){
-        BigDecimal amount = new BigDecimal("100.00");
+    void shouldReturn401_whenPasswordIncorrect() {
+        LoginRequest req = new LoginRequest("alice", "incorrectPassword");
+        User user = new User("alice", "testHashedPassword", "USER");
 
-        BigDecimal expected = new BigDecimal("400.00");
-        BigDecimal result = service.exchange(amount, "EUR", "PLN");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("incorrectPassword", user.getPasswordHash())).thenReturn(false);
 
-        assertEquals(expected, result);
+        ResponseEntity <?> resp = loginController.login(req);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
     }
 
     @Test
-    void shouldThrowException_whenUnsupportedCurrency(){
-        BigDecimal amount = new BigDecimal("100.00");
+    void shouldReturn401_whenUserIncorrect() {
+        LoginRequest req = new LoginRequest("incorrectUser", "password123");
+        User user = new User("incorrectUser", "password123", "USER");
 
-        Exception exception = assertThrows(UnsupportedCurrencyException.class, () -> {
-            service.exchange(amount, "GBP", "PLN");
-        });
+        when(userRepository.findByUsername("incorrectUser")).thenReturn(Optional.empty());
 
-        assertTrue(exception.getMessage().contains("unknown currency: GBP"));
+        ResponseEntity <?> resp = loginController.login(req);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, resp.getStatusCode());
     }
 }
 
