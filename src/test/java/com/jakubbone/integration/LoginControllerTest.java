@@ -1,4 +1,4 @@
-package com.jakubbone.version_info_service.integration;
+package com.jakubbone.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

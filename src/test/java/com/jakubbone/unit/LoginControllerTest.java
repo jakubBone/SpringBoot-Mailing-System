@@ -1,4 +1,4 @@
-package com.jakubbone.version_info_service.unit;
+package com.jakubbone.unit;
 
 import com.jakubbone.controller.LoginController;
 import com.jakubbone.dto.LoginRequest;
