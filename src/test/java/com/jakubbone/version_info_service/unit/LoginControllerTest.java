@@ -3,7 +3,7 @@ package com.jakubbone.version_info_service.unit;
 import com.jakubbone.controller.LoginController;
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
-import com.jakubbone.reposotory.UserRepository;
+import com.jakubbone.repository.UserRepository;
 import com.jakubbone.utils.JwtTokenProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
-import com.jakubbone.reposotory.UserRepository;
+import com.jakubbone.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

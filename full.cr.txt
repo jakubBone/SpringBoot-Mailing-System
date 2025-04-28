@@ -103,7 +103,7 @@ package com.jakubbone.controller;
 
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
-import com.jakubbone.reposotory.UserRepository;
+import com.jakubbone.repository.UserRepository;
 import com.jakubbone.utils.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -235,7 +235,7 @@ public class User {
 ====================
 FILE: UserRepository.java
 
-package com.jakubbone.reposotory;
+package com.jakubbone.repository;
 
 import com.jakubbone.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -393,7 +393,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
-import com.jakubbone.reposotory.UserRepository;
+import com.jakubbone.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -490,7 +490,7 @@ package com.jakubbone.version_info_service.unit;
 import com.jakubbone.controller.LoginController;
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
-import com.jakubbone.reposotory.UserRepository;
+import com.jakubbone.repository.UserRepository;
 import com.jakubbone.utils.JwtTokenProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

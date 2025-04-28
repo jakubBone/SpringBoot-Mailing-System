@@ -2,7 +2,7 @@ package com.jakubbone.controller;
 
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
-import com.jakubbone.reposotory.UserRepository;
+import com.jakubbone.repository.UserRepository;
 import com.jakubbone.utils.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
