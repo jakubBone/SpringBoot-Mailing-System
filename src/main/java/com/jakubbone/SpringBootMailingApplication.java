@@ -5,8 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 
 @SpringBootApplication
-public class MailingApp {
+public class SpringBootMailingApplication {
 	public static void main(String[] args) {
-		SpringApplication.run(MailingApp.class, args);
+		SpringApplication.run(SpringBootMailingApplication.class, args);
 	}
 }
