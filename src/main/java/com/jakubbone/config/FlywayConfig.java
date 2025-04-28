@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile;
  *   - Enable only in development by activating the "dev" profile via application.properties:
  *       spring.profiles.active=dev
  *   - Or programmatically in your main application:
- *       SpringApplication app = new SpringApplication(MailingApp.class);
+ *       SpringApplication app = new SpringApplication(SpringBootMailingApplication.class);
  *       app.setAdditionalProfiles("dev");
  *       app.run(args);
  *
@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Profile;
  */
 
 @Configuration
-@Profile("dev") // only for development: drops and rebuilds schema before migrations
+@Profile("dev") // only for development
 public class FlywayConfig {
     @Bean
     public FlywayMigrationStrategy cleanMigrateStrategy() {

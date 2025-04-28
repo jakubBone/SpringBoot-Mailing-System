@@ -16,6 +16,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
+/**
+ * Filter that validates JWT tokens and enforces ADMIN role.
+ * Skipped for public endpoints; throws 403 if role is not ADMIN.
+ */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class JwtTokenFilter extends OncePerRequestFilter {
