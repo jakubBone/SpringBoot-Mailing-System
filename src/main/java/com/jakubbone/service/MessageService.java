@@ -1,5 +1,7 @@
 package com.jakubbone.service;
 
+import com.jakubbone.model.User;
+
 public interface MessageService {
-    void sendMessage(Long senderId, Long recipientId, String content);
+    void sendMessage(User sender, User recipient, String content);
 }
