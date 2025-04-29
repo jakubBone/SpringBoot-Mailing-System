@@ -1,4 +1,5 @@
 package com.jakubbone.service;
 
-public class MessageService {
+public interface MessageService {
+    void sendMessage(Long senderId, Long recipientId, String content);
 }
