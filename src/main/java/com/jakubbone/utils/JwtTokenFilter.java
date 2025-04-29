@@ -42,14 +42,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         .getBody();
 
                 String role = claims.get("role", String.class);
-                if(!"ADMIN".equals(role)){
+                if (!"ADMIN".equals(role)) {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin role required");
                 }
 
-            } catch (JwtException | IllegalArgumentException e) {
-                // Uncorrected or expired token
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
-                return;
+            } catch (JwtException | IllegalArgumentException | ResponseStatusException e) {
+                throw e;
             }
         }
         filterChain.doFilter(request, response);
