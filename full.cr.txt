@@ -71,8 +71,10 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/login", "/api/info", "/api/uptime").permitAll() // public
+                        .anyRequest().authenticated() // the rest requires JWT authentication
                 )
+
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -197,6 +199,55 @@ public class LoginRequest {
 }
 
 ====================
+FILE: GlobalExceptionHandler.java
+
+package com.jakubbone.exception;
+
+import io.jsonwebtoken.JwtException;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
+
+@ControllerAdvice
+@Log4j2
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<String> handleJwtException(JwtException e){
+        log.error("JWT error occurred: {}", e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid JWT token");
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e){
+        log.error("Illegal argument exception: {}", e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid argument: " + e.getMessage());
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e){
+        log.warn("Invalid argument provided: {}", e.getMessage());
+        return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<String> handleDataAccessException(DataAccessException e) {
+        log.error("Database error occurred: {}", e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleGenericException(Exception e) {
+        log.error("An unexpected error occurred: {}", e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred");
+    }
+}
+
+====================
 FILE: User.java
 
 package com.jakubbone.model;
@@ -315,14 +366,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         .getBody();
 
                 String role = claims.get("role", String.class);
-                if(!"ADMIN".equals(role)){
+                if (!"ADMIN".equals(role)) {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin role required");
                 }
 
-            } catch (JwtException | IllegalArgumentException e) {
-                // Uncorrected or expired token
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
-                return;
+            } catch (JwtException | IllegalArgumentException | ResponseStatusException e) {
+                throw e;
             }
         }
         filterChain.doFilter(request, response);
@@ -383,7 +432,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false) // required because SpringBootTest loads Spring Security configuration
+@AutoConfigureMockMvc
 class InfoControllerTest {
 	@Test
 	void shouldReturnApplicationVersion(@Autowired MockMvc mockMvc) throws Exception {
