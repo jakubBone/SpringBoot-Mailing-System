@@ -1,7 +1,8 @@
 package com.jakubbone.repository;
 
 import com.jakubbone.model.Message;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public class MessageRepository {
-    void save(Message message) {}
+public interface MessageRepository extends JpaRepository<Message, Long> {
+
 }
