@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-generated
-    private Long id;
+    private long id;
 
     @ManyToOne(optional = false) // Relation to User Entity
     @JoinColumn(name = "senderId")

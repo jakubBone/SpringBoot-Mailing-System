@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 public class MessageServiceImpl implements MessageService {
@@ -21,10 +20,10 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public Message sendMessage(User fromUsername, User toUsername, String content) {
-        User sender = userRepository.findByUsername(fromUsername.getUsername())
+    public Message sendMessage(String fromUsername, String toUsername, String content) {
+        User sender = userRepository.findByUsername(fromUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("Sender not found"));
-        User recipient = userRepository.findByUsername(toUsername.getUsername())
+        User recipient = userRepository.findByUsername(toUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("Recipient not found"));
 
         Message msg = new Message();
