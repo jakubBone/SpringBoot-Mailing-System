@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ActiveProfiles("test") // set h2 profile; test uses application-test.properties
 @SpringBootTest // @SpringBootTest runs all components with all Spring configuration
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc // Without running the server
 class LoginControllerTest {
     ObjectMapper mapper = new ObjectMapper();
 

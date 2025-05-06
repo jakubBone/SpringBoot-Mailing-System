@@ -7,13 +7,14 @@ and implementing user authentication using JWT. The application leverages Postgr
 
 ## 📖 Features
 
-- **User Management**: creating users and assigning roles (ADMIN, USER)
-- **JWT Authentication**: user login and JWT token generation
-- **REST API**: Provides endpoints for core application functionality 
+- **User Management**: Creating users with role-based access (USER, ADMIN)
+- **JWT Authentication**: Secure login with token generation
+- **Role-Based Access Control**: Filters enforce ADMIN-only access where needed
+- **Message Sending System**: Sending a message from the logged-in user to another users
+- **RESTful Endpoints**: For login, message sending, etc.
 - **Database Integration**: PostgreSQL for production, H2 for testing
-- **Automatic Database Migrations**: managing database schema changes using Flyway
-- **Environment Configuration**: utilization of .env file
-
+- **Automatic Database Migrations**: Managing database schema changes using Flyway
+- **Environment Configuration**: Utilization of .env file
 
 ## 🚀 Technologies & Libraries Used
 
@@ -22,7 +23,7 @@ and implementing user authentication using JWT. The application leverages Postgr
 - Spring MVC (Web)
 - Spring Security
 - Spring Data JPA
-- Hibernate / JPA
+- Hibernate
 - PostgreSQL & H2 Database
 - JWT
 - Flyway
@@ -45,21 +46,23 @@ and implementing user authentication using JWT. The application leverages Postgr
 ├── src
 │   ├── main
 │   │   ├── java/com/jakubbone
-│   │   │   ├── config         # Security and Flyway configuration
-│   │   │   ├── controller     # REST API endpoints
+│   │   │   ├── config         # Flyway and security configuration
+│   │   │   ├── controller     # REST API controllers
 │   │   │   ├── dto            # Data transfer objects
+│   │   │   ├── exception      # Global exception handling
 │   │   │   ├── model          # JPA entity models
-│   │   │   ├── repository     # JPA repositories
-│   │   │   └── utils          # Utilities (JWT)
+│   │   │   ├── repository     # Spring Data JPA repositories
+│   │   │   ├── service        # Business logic and service interfaces
+│   │   │   └── utils          # JWT token provider and filter
 │   │   └── resources          
 │   │       ├── db/migration   # Flyway migrations scripts (PostgreSQL and H2)
 │   │       ├── application.properties
 │   │       └── application-test.properties
 │   └── test                    # Unit and integration tests
-├── Dockerfile                  # Docker image build
+├── Dockerfile                  # Builds application Docker image
 ├── docker-compose.yml          # Container orchestration
 ├── pom.xml                     # Maven dependency management
-└── .env                        # External configuration variables
+└── .env                        # Secrets and environment variables
 ```
 
 ## 🛠️ Environment Configuration
@@ -125,9 +128,10 @@ mvn clean test
 
 ## 📈 Application Endpoints
 
-- `/api/login` – login, authentication and JWT token generation
-- `/api/info` – returns the current application version
-- `/api/uptime` – returns application uptime in seconds
+- `/api/login` – Authenticates user and returns a JWT token
+- `/api/messages` – Sends a message from the logged-in user to another users
+- `/api/info` – Returns the current application version
+- `/api/uptime` – Returns application uptime in seconds
 
 
 ## 📦 Building with Docker
