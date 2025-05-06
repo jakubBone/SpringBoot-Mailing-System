@@ -49,7 +49,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 String role = claims.get("role", String.class);
 
                 if (!"ADMIN".equals(role)) {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin role required");
+                    response.sendError(HttpStatus.UNAUTHORIZED.value(), "Admin role required");
+                    return;
                 }
 
                 // Authentication building with prefix ROLE_
