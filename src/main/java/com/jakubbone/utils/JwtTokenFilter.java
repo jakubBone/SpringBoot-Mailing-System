@@ -10,11 +10,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Filter that validates JWT tokens and enforces ADMIN role.
@@ -41,13 +45,27 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         .parseClaimsJws(token)
                         .getBody();
 
+                String username = claims.getSubject();
                 String role = claims.get("role", String.class);
+
                 if (!"ADMIN".equals(role)) {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin role required");
                 }
 
-            } catch (JwtException | IllegalArgumentException | ResponseStatusException e) {
-                throw e;
+                // Authentication building with prefix ROLE_
+                var authorities = List.of(
+                        new SimpleGrantedAuthority("ROLE_" + role)
+                );
+                var auth = new UsernamePasswordAuthenticationToken(
+                        username, null, authorities
+                );
+
+                // 3) Add auth to Security Context to authorize request
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+            } catch (JwtException | IllegalArgumentException ex) {
+                response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token");
+                return;
             }
         }
         filterChain.doFilter(request, response);
