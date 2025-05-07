@@ -1,6 +1,5 @@
 package com.jakubbone.integration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.model.User;
@@ -9,7 +8,6 @@ import com.jakubbone.repository.UserRepository;
 import com.jakubbone.utils.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
