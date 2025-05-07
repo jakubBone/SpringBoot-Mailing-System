@@ -51,6 +51,7 @@ class MessageControllerTest {
     void setup() {
         messageRepository.deleteAll();
         userRepository.deleteAll();
+
         User testUser = new User("testUser", passwordEncoder.encode("testPassword"), "USER");
         User testAdmin = new User("testAdmin", passwordEncoder.encode("testPassword"), "ADMIN");
         userRepository.save(testUser);
@@ -79,6 +80,7 @@ class MessageControllerTest {
     @Test
     void shouldReturn401_whenInvalidToken(@Autowired MockMvc mockMvc) throws Exception {
         SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
+
         mockMvc.perform(post("/api/messages")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -91,6 +93,7 @@ class MessageControllerTest {
     @Test
     void shouldReturn201_whenInvalidPayload(@Autowired MockMvc mockMvc) throws Exception {
         SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
+
         mockMvc.perform(post("/api/messages")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -103,6 +106,7 @@ class MessageControllerTest {
     @Test
     void shouldReturn404_whenRecipientNotFound(@Autowired MockMvc mockMvc) throws Exception {
         SendMessageRequest req = new SendMessageRequest("unknown", "Hello unknown!");
+
         mockMvc.perform(post("/api/messages")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -115,6 +119,7 @@ class MessageControllerTest {
     @Test
     void shouldReturn404_whenNoContent(@Autowired MockMvc mockMvc) throws Exception {
         SendMessageRequest req = new SendMessageRequest("testUser", "");
+
         mockMvc.perform(post("/api/messages")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                     .contentType(MediaType.APPLICATION_JSON)
