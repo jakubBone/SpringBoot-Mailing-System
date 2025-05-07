@@ -71,10 +71,9 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/api/info", "/api/uptime").permitAll() // public
-                        .anyRequest().authenticated() // the rest requires JWT authentication
+                        .requestMatchers("/api/messages").authenticated() // the rest requires JWT authentication
+                        .anyRequest().permitAll()
                 )
-
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -180,6 +179,40 @@ public class LoginController {
 }
 
 ====================
+FILE: MessageController.java
+
+package com.jakubbone.controller;
+
+import com.jakubbone.dto.SendMessageRequest;
+import com.jakubbone.model.Message;
+import com.jakubbone.service.MessageService;
+import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/messages")
+public class MessageController {
+    private MessageService messageService;
+
+    public MessageController(MessageService messageService) {
+        this.messageService = messageService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Message> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){
+        String senderUsername = authentication.getName();
+        Message savedMessage = messageService.sendMessage(senderUsername, req.getTo(), req.getText());
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedMessage);
+    }
+}
+
+====================
 FILE: LoginRequest.java
 
 package com.jakubbone.dto;
@@ -199,6 +232,30 @@ public class LoginRequest {
 }
 
 ====================
+FILE: SendMessageRequest.java
+
+package com.jakubbone.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor // @NoArgsConstructor - Jackson requires no args constructor to create JSON request
+public class SendMessageRequest {
+    @NotBlank(message = "Recipient username cannot be blank")
+    private String to;
+
+    @NotBlank(message = "Message text cannot be blank")
+    private String text;
+
+}
+
+====================
 FILE: GlobalExceptionHandler.java
 
 package com.jakubbone.exception;
@@ -208,43 +265,112 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
 @ControllerAdvice
+// or @RestControllerAdvice -> acts as @ControllerAdvice + @ResponseBody for all methods
 @Log4j2
 public class GlobalExceptionHandler {
 
+    // Handles JWT-related exceptions (e.g. invalid or expired token)
+    // HTTP Status: 401 Unauthorized
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<String> handleJwtException(JwtException e){
         log.error("JWT error occurred: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid JWT token");
     }
 
+    // Handles invalid method arguments (e.g. illegal or unexpected input)
+    // HTTP Status: 400 Bad Request
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e){
         log.error("Illegal argument exception: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid argument: " + e.getMessage());
     }
 
+    // Handles ResponseStatusException (thrown manually with a custom HTTP status)
+    // HTTP Status: Defined by exception (dynamic)
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e){
         log.warn("Invalid argument provided: {}", e.getMessage());
         return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
     }
 
+    // Handles database-related exceptions
+    // HTTP Status: 500 Internal Server Error
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<String> handleDataAccessException(DataAccessException e) {
         log.error("Database error occurred: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
     }
 
+    // Handles case when user is not found in the system (e.g. during authentication)
+    // HTTP Status: 404 Not Found
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<String> handleUserNotFound(UsernameNotFoundException e) {
+        log.error("User not found: {}", e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+    }
+
+    // Handles validation errors for incoming request data (e.g. @Valid fails)
+    // HTTP Status: 400 Bad Request
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException e) {
+        log.error("Invalid request data: {}", e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid request data");
+    }
+
+
+    // Catches any other unhandled exceptions (generic)
+    // HTTP Status: 500 Internal Server Error
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception e) {
-        log.error("An unexpected error occurred: {}", e.getMessage(), e);
+        log.error("Unexpected error occurred: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred");
     }
+
+
+}
+
+====================
+FILE: Message.java
+
+package com.jakubbone.model;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "messages")
+@Getter
+@Setter
+@NoArgsConstructor // JPA/Hibernate require to create object getting from DB
+public class Message {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-generated
+    private long id;
+
+    @ManyToOne(optional = false) // Relation to User Entity
+    @JoinColumn(name = "senderId")
+    private User sender;
+
+    @ManyToOne(optional = false) // Relation to User Entity
+    @JoinColumn(name = "recipientId")
+    private User recipient;
+
+    @Column(nullable = false)
+    private String content;
+
+    @Column(nullable = false)
+    private LocalDateTime timestamp;
 }
 
 ====================
@@ -288,6 +414,18 @@ public class User {
 }
 
 ====================
+FILE: MessageRepository.java
+
+package com.jakubbone.repository;
+
+import com.jakubbone.model.Message;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface MessageRepository extends JpaRepository<Message, Long> {
+
+}
+
+====================
 FILE: UserRepository.java
 
 package com.jakubbone.repository;
@@ -302,6 +440,58 @@ import java.util.Optional;
 // for User Entity with the key type Long
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
+}
+
+====================
+FILE: MessageService.java
+
+package com.jakubbone.service;
+
+import com.jakubbone.model.Message;
+
+public interface MessageService {
+    Message sendMessage(String senderUsername, String recipientUsername, String content);
+}
+
+====================
+FILE: MessageServiceImpl.java
+
+package com.jakubbone.service;
+
+import com.jakubbone.model.Message;
+import com.jakubbone.model.User;
+import com.jakubbone.repository.MessageRepository;
+import com.jakubbone.repository.UserRepository;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+@Service
+public class MessageServiceImpl implements MessageService {
+    private final UserRepository userRepository;
+    private final MessageRepository messageRepository;
+
+    public MessageServiceImpl(UserRepository userRepository, MessageRepository messageRepository) {
+        this.userRepository = userRepository;
+        this.messageRepository = messageRepository;
+    }
+
+    @Override
+    public Message sendMessage(String fromUsername, String toUsername, String content) {
+        User sender = userRepository.findByUsername(fromUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("Sender not found"));
+        User recipient = userRepository.findByUsername(toUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("Recipient not found"));
+
+        Message msg = new Message();
+        msg.setSender(sender);
+        msg.setRecipient(recipient);
+        msg.setContent(content);
+        msg.setTimestamp(LocalDateTime.now());
+
+        return messageRepository.save(msg);
+    }
 }
 
 ====================
@@ -334,11 +524,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Filter that validates JWT tokens and enforces ADMIN role.
@@ -365,13 +559,28 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         .parseClaimsJws(token)
                         .getBody();
 
+                String username = claims.getSubject();
                 String role = claims.get("role", String.class);
+
                 if (!"ADMIN".equals(role)) {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin role required");
+                    response.sendError(HttpStatus.UNAUTHORIZED.value(), "Admin role required");
+                    return;
                 }
 
-            } catch (JwtException | IllegalArgumentException | ResponseStatusException e) {
-                throw e;
+                // Authentication building with prefix ROLE_
+                var authorities = List.of(
+                        new SimpleGrantedAuthority("ROLE_" + role)
+                );
+                var auth = new UsernamePasswordAuthenticationToken(
+                        username, null, authorities
+                );
+
+                // 3) Add auth to Security Context to authorize request
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+            } catch (JwtException | IllegalArgumentException ex) {
+                response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token");
+                return;
             }
         }
         filterChain.doFilter(request, response);
@@ -423,6 +632,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
@@ -431,6 +641,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 class InfoControllerTest {
@@ -479,19 +690,24 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
 
 @ActiveProfiles("test") // set h2 profile; test uses application-test.properties
 @SpringBootTest // @SpringBootTest runs all components with all Spring configuration
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc // MockMvc injection for HTTP requests sending without server running
 class LoginControllerTest {
+    @Autowired
     ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
+
 
     @BeforeEach
     void setup() {
@@ -502,9 +718,9 @@ class LoginControllerTest {
 
     @Test
     void shouldReturn401_whenPasswordIncorrect(@Autowired MockMvc mockMvc) throws Exception {
-        LoginRequest req = new LoginRequest();
-        req.setUsername("testUser");
-        req.setPassword("incorrectPassword");
+        LoginRequest req = new LoginRequest("testUser","incorrectPassword" );
+        //req.setUsername("testUser");
+        //req.setPassword();
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -515,9 +731,7 @@ class LoginControllerTest {
 
     @Test
     void shouldReturn401_whenUsernameIncorrect(@Autowired MockMvc mockMvc) throws Exception {
-        LoginRequest req = new LoginRequest();
-        req.setUsername("incorrectUsername");
-        req.setUsername("testPassword");
+        LoginRequest req = new LoginRequest("incorrectUsername", "testPassword" );
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -528,9 +742,7 @@ class LoginControllerTest {
 
     @Test
     void shouldReturnOk_CredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
-        LoginRequest req = new LoginRequest();
-        req.setUsername("testUser");
-        req.setPassword("testPassword");
+        LoginRequest req = new LoginRequest("testUser", "testPassword");
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -541,9 +753,8 @@ class LoginControllerTest {
 
     @Test
     void shouldReturnToken_CredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
-        LoginRequest req = new LoginRequest();
-        req.setUsername("testUser");
-        req.setPassword("testPassword");
+        LoginRequest req = new LoginRequest("testUser", "testPassword");
+
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -551,6 +762,138 @@ class LoginControllerTest {
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists());
+    }
+}
+
+====================
+FILE: MessageControllerTest.java
+
+package com.jakubbone.integration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jakubbone.dto.SendMessageRequest;
+import com.jakubbone.model.User;
+import com.jakubbone.repository.MessageRepository;
+import com.jakubbone.repository.UserRepository;
+import com.jakubbone.utils.JwtTokenProvider;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
+@ActiveProfiles("test")
+@SpringBootTest
+@AutoConfigureMockMvc
+class MessageControllerTest {
+    @Autowired
+    ObjectMapper mapper = new ObjectMapper();
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    MessageRepository messageRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    String adminToken;
+    String userToken;
+
+    @BeforeEach
+    void setup() {
+        messageRepository.deleteAll();
+        userRepository.deleteAll();
+
+        User testUser = new User("testUser", passwordEncoder.encode("testPassword"), "USER");
+        User testAdmin = new User("testAdmin", passwordEncoder.encode("testPassword"), "ADMIN");
+        userRepository.save(testUser);
+        userRepository.save(testAdmin);
+
+        userToken = jwtTokenProvider.createToken(testUser.getUsername(), String.valueOf(testUser.getRole()));
+        adminToken = jwtTokenProvider.createToken(testAdmin.getUsername(), String.valueOf(testAdmin.getRole()));
+    }
+
+    @Test
+    void shouldReturn201_whenValidToken(@Autowired MockMvc mockMvc) throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
+        mockMvc.perform(post("/api/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.sender.username").value("testAdmin"))
+                .andExpect(jsonPath("$.recipient.username").value("testUser"))
+                .andExpect(jsonPath("$.content").value("Hello user!"));
+    }
+
+
+    @Test
+    void shouldReturn401_whenInvalidToken(@Autowired MockMvc mockMvc) throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
+
+        mockMvc.perform(post("/api/messages")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isUnauthorized());
+
+    }
+
+    @Test
+    void shouldReturn201_whenInvalidPayload(@Autowired MockMvc mockMvc) throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
+
+        mockMvc.perform(post("/api/messages")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isUnauthorized());
+
+    }
+
+    @Test
+    void shouldReturn404_whenRecipientNotFound(@Autowired MockMvc mockMvc) throws Exception {
+        SendMessageRequest req = new SendMessageRequest("unknown", "Hello unknown!");
+
+        mockMvc.perform(post("/api/messages")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isNotFound());
+
+    }
+
+    @Test
+    void shouldReturn404_whenNoContent(@Autowired MockMvc mockMvc) throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testUser", "");
+
+        mockMvc.perform(post("/api/messages")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isNotFound());
     }
 }
 
@@ -586,13 +929,13 @@ public class LoginControllerTest {
     LoginController loginController;
 
     @Mock
-    private UserRepository userRepository;
+    UserRepository userRepository;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
 
     @Mock
-    private JwtTokenProvider jwtTokenProvider;
+    JwtTokenProvider jwtTokenProvider;
 
     @Test
     void shouldReturnToken_whenLoginSuccess_ReturnsToken() {
