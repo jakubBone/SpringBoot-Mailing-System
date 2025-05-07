@@ -18,19 +18,24 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
 
 @ActiveProfiles("test") // set h2 profile; test uses application-test.properties
 @SpringBootTest // @SpringBootTest runs all components with all Spring configuration
-@AutoConfigureMockMvc // Without running the server
+@AutoConfigureMockMvc // MockMvc injection for HTTP requests sending without server running
 class LoginControllerTest {
+    @Autowired
     ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
+
 
     @BeforeEach
     void setup() {
@@ -41,9 +46,9 @@ class LoginControllerTest {
 
     @Test
     void shouldReturn401_whenPasswordIncorrect(@Autowired MockMvc mockMvc) throws Exception {
-        LoginRequest req = new LoginRequest();
-        req.setUsername("testUser");
-        req.setPassword("incorrectPassword");
+        LoginRequest req = new LoginRequest("testUser","incorrectPassword" );
+        //req.setUsername("testUser");
+        //req.setPassword();
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -54,9 +59,7 @@ class LoginControllerTest {
 
     @Test
     void shouldReturn401_whenUsernameIncorrect(@Autowired MockMvc mockMvc) throws Exception {
-        LoginRequest req = new LoginRequest();
-        req.setUsername("incorrectUsername");
-        req.setUsername("testPassword");
+        LoginRequest req = new LoginRequest("incorrectUsername", "testPassword" );
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -67,9 +70,7 @@ class LoginControllerTest {
 
     @Test
     void shouldReturnOk_CredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
-        LoginRequest req = new LoginRequest();
-        req.setUsername("testUser");
-        req.setPassword("testPassword");
+        LoginRequest req = new LoginRequest("testUser", "testPassword");
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -80,9 +81,8 @@ class LoginControllerTest {
 
     @Test
     void shouldReturnToken_CredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
-        LoginRequest req = new LoginRequest();
-        req.setUsername("testUser");
-        req.setPassword("testPassword");
+        LoginRequest req = new LoginRequest("testUser", "testPassword");
+
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)

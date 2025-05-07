@@ -27,13 +27,13 @@ public class LoginControllerTest {
     LoginController loginController;
 
     @Mock
-    private UserRepository userRepository;
+    UserRepository userRepository;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
 
     @Mock
-    private JwtTokenProvider jwtTokenProvider;
+    JwtTokenProvider jwtTokenProvider;
 
     @Test
     void shouldReturnToken_whenLoginSuccess_ReturnsToken() {

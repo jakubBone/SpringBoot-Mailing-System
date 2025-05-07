@@ -64,6 +64,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid request data");
     }
 
+
     // Catches any other unhandled exceptions (generic)
     // HTTP Status: 500 Internal Server Error
     @ExceptionHandler(Exception.class)

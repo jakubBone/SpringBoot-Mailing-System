@@ -27,5 +27,4 @@ public class MessageController {
         Message savedMessage = messageService.sendMessage(senderUsername, req.getTo(), req.getText());
         return ResponseEntity.status(HttpStatus.CREATED).body(savedMessage);
     }
-
 }
