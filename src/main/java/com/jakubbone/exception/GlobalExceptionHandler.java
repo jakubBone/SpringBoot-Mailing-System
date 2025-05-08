@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     // HTTP Status: 401 Unauthorized
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<Map<String,Object>> handleJwtException(JwtException e){
-        log.error("JWT error occurred: {}", e.getMessage(), e);
+        log.error("JWT error occurred: {}", e.getMessage());
         return ResponseHandler.error(HttpStatus.UNAUTHORIZED, "Invalid JWT token");
     }
 
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
     // HTTP Status: 400 Bad Request
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String,Object>> handleIllegalArgumentException(IllegalArgumentException e){
-        log.error("Illegal argument exception: {}", e.getMessage(), e);
+        log.error("Illegal argument exception: {}", e.getMessage());
         return ResponseHandler.error(HttpStatus.UNAUTHORIZED, "Invalid argument: " + e.getMessage());
     }
 
@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     // HTTP Status: 500 Internal Server Error
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<?> handleDataAccessException(DataAccessException e) {
-        log.error("Database error occurred: {}", e.getMessage(), e);
+        log.error("Database error occurred: {}", e.getMessage());
         return ResponseHandler.error(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
 
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
     // HTTP Status: 404 Not Found
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Map<String,Object>> handleUserNotFound(UsernameNotFoundException e) {
-        log.error("User not found: {}", e.getMessage(), e);
+        log.error("User not found: {}", e.getMessage());
         return ResponseHandler.error(HttpStatus.NOT_FOUND, "User not found");
     }
 
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
     // HTTP Status: 400 Bad Request
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String,Object>> handleValidationException(MethodArgumentNotValidException e) {
-        log.error("Invalid request data: {}", e.getMessage(), e);
+        log.error("Invalid request data: {}", e.getMessage());
         return ResponseHandler.error(HttpStatus.NOT_FOUND, "Invalid request data");
     }
 
@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
     // HTTP Status: 500 Internal Server Error
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String,Object>> handleGenericException(Exception e) {
-        log.error("Unexpected error occurred: {}", e.getMessage(), e);
+        log.error("Unexpected error occurred: {}", e.getMessage());
         return ResponseHandler.error(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred");
     }
 }
