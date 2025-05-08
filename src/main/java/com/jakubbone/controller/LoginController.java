@@ -38,8 +38,6 @@ public class LoginController {
         Optional<User> userOpt = userRepository.findByUsername(username);
 
         if (userOpt.isEmpty()){
-            // Return a generic HTTP 401 Unauthorized response without specifying
-            // whether the username or the password is incorrect
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
 
