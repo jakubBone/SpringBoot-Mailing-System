@@ -68,10 +68,10 @@ class MessageControllerTest {
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.sender.username").value("testAdmin"))
-                .andExpect(jsonPath("$.recipient.username").value("testUser"))
-                .andExpect(jsonPath("$.content").value("Hello user!"));
+                .andExpect(jsonPath("$.data.id").exists())
+                .andExpect(jsonPath("$.data.sender.username").value("testAdmin"))
+                .andExpect(jsonPath("$.data.recipient.username").value("testUser"))
+                .andExpect(jsonPath("$.data.content").value("Hello user!"));
     }
 
 
@@ -123,6 +123,6 @@ class MessageControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
     }
 }

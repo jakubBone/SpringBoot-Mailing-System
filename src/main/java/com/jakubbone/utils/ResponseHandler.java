@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class ResponseHandler {
 
-    // Response for status OK (200)
+    // envelope for status OK (200)
     public static ResponseEntity<Map<String,Object>> success(Object data) {
         Map<String,Object> body = Map.of(
                 "timestamp", Instant.now().toString(),
@@ -19,7 +19,7 @@ public class ResponseHandler {
         return ResponseEntity.ok(body);
     }
 
-    // Response for another status (e.g. CREATED)
+    // envelope for another status (e.g. CREATED)
     public static ResponseEntity<Map<String,Object>> success(HttpStatus status, Object data) {
         Map<String,Object> body = Map.of(
                 "timestamp", Instant.now().toString(),
@@ -30,7 +30,7 @@ public class ResponseHandler {
         return ResponseEntity.status(status).body(body);
     }
 
-    // Response for error (HttpStatus)
+    // envelope for error (HttpStatus)
     public static ResponseEntity<Map<String,Object>> error(HttpStatus status, String message) {
         Map<String,Object> body = Map.of(
                 "timestamp", Instant.now().toString(),
@@ -41,7 +41,7 @@ public class ResponseHandler {
         return ResponseEntity.status(status).body(body);
     }
 
-    // Response for error (HttpStatusCode)
+    // envelope for error (HttpStatusCode)
     public static ResponseEntity<Map<String, Object>> error(HttpStatusCode statusCode, String message) {
         Map<String,Object> body = Map.of(
                 "timestamp", Instant.now().toString(),
