@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String,Object>> handleIllegalArgumentException(IllegalArgumentException e){
         log.error("Illegal argument exception: {}", e.getMessage());
-        return ResponseHandler.error(HttpStatus.UNAUTHORIZED, "Invalid argument: " + e.getMessage());
+        return ResponseHandler.error(HttpStatus.BAD_REQUEST, "Invalid argument: " + e.getMessage());
     }
 
     // Handles ResponseStatusException (thrown manually with a custom HTTP status)
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String,Object>> handleValidationException(MethodArgumentNotValidException e) {
         log.error("Invalid request data: {}", e.getMessage());
-        return ResponseHandler.error(HttpStatus.NOT_FOUND, "Invalid request data");
+        return ResponseHandler.error(HttpStatus.BAD_REQUEST, "Invalid request data");
     }
 
     // Catches any other unhandled exceptions (generic)
