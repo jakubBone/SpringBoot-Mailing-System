@@ -4,6 +4,7 @@ import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
 import com.jakubbone.repository.UserRepository;
 import com.jakubbone.utils.JwtTokenProvider;
+import com.jakubbone.utils.ResponseHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -38,13 +39,13 @@ public class LoginController {
         Optional<User> userOpt = userRepository.findByUsername(username);
 
         if (userOpt.isEmpty()){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+            return ResponseHandler.error(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
 
         User user = userOpt.get();
 
         if (!encoder.matches(password, user.getPasswordHash())){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+            return ResponseHandler.error(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
 
         String token = jwtTokenProvider.createToken(user.getUsername(), String.valueOf(user.getRole()));
