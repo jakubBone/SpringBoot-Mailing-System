@@ -1,5 +1,7 @@
 # ✉️ Spring Boot Mailing System
 
+![](src/main/resources/image/logo.png)
+
 This project is currently being developed to strengthen my skills in Spring Boot, Hibernate, RESTful API design, and dependency injection. 
 It demonstrates building a RESTful web application simulating an email system, utilizing Spring Boot, managing databases with Flyway, 
 and implementing user authentication using JWT. The application leverages PostgreSQL for production environments and H2 for testing.
