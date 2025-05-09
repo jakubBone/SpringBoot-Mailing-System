@@ -50,13 +50,13 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 String username = claims.getSubject();
                 String role = claims.get("role", String.class);
 
-                if (!"ADMIN".equals(role)) {
+                /*if (!"ADMIN".equals(role)) {
                     log.warn("User '{}' with role '{}' attempted admin access on {}",
                             username, role, request.getRequestURI()
                     );
                     response.sendError(HttpStatus.UNAUTHORIZED.value(), "Admin role required");
                     return;
-                }
+                }*/
 
                 // Authentication building with prefix ROLE_
                 var authorities = List.of(
@@ -66,7 +66,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         username, null, authorities
                 );
 
-                // 3) Add auth to Security Context to authorize request
+                // Add auth to Security Context to authorize request
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
             } catch (JwtException | IllegalArgumentException ex) {
