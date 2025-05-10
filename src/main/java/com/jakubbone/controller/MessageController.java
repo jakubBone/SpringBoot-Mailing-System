@@ -20,7 +20,7 @@ import java.util.Map;
 @RequestMapping("/api/messages")
 @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 public class MessageController {
-    private MessageService messageService;
+    private final MessageService messageService;
 
     public MessageController(MessageService messageService) {
         this.messageService = messageService;
