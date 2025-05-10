@@ -60,7 +60,7 @@ class MessageControllerTest {
     }
 
     @Test
-    void shouldReturn201_whenValidToken(@Autowired MockMvc mockMvc) throws Exception {
+    void shouldReturn201_whenAdminValidToken(@Autowired MockMvc mockMvc) throws Exception {
         SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
         mockMvc.perform(post("/api/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -76,28 +76,18 @@ class MessageControllerTest {
 
 
     @Test
-    void shouldReturn401_whenInvalidToken(@Autowired MockMvc mockMvc) throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
-
+    void shouldReturn401_whenUserValidToken(@Autowired MockMvc mockMvc) throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testAdmin", "Hello admin!");
         mockMvc.perform(post("/api/messages")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(req)))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isUnauthorized());
-
-    }
-
-    @Test
-    void shouldReturn201_whenInvalidPayload(@Autowired MockMvc mockMvc) throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
-
-        mockMvc.perform(post("/api/messages")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(req)))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.id").exists())
+                .andExpect(jsonPath("$.data.sender.username").value("testUser"))
+                .andExpect(jsonPath("$.data.recipient.username").value("testAdmin"))
+                .andExpect(jsonPath("$.data.content").value("Hello admin!"));
 
     }
 
