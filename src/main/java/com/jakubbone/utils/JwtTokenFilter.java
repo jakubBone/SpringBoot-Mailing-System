@@ -50,24 +50,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 String username = claims.getSubject();
                 String role = claims.get("role", String.class);
 
-                if (!"ADMIN".equals(role)) {
-                    log.warn("User '{}' with role '{}' attempted admin access on {}",
-                            username, role, request.getRequestURI()
-                    );
-                    response.sendError(HttpStatus.UNAUTHORIZED.value(), "Admin role required");
-                    return;
-                }
-
-                // Authentication building with prefix ROLE_
-                var authorities = List.of(
-                        new SimpleGrantedAuthority("ROLE_" + role)
-                );
-                var auth = new UsernamePasswordAuthenticationToken(
-                        username, null, authorities
-                );
-
-                // 3) Add auth to Security Context to authorize request
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                addAuthorizationToContext(username, role);
 
             } catch (JwtException | IllegalArgumentException ex) {
                 response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid or expired token");
@@ -75,5 +58,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    public void addAuthorizationToContext(String username, String role) {
+        // Authentication building with prefix ROLE_
+        var authorities = List.of(
+                new SimpleGrantedAuthority("ROLE_" + role)
+        );
+        var auth = new UsernamePasswordAuthenticationToken(
+                username, null, authorities
+        );
+
+        // Add auth to Security Context to authorize request
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }
