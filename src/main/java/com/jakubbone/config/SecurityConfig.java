@@ -33,8 +33,10 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/messages").authenticated() // the rest requires JWT authentication
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/stop").hasRole("ADMIN")
+                        .requestMatchers(("api/messages")).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/login", "/api/register", "/api/info", "/uptime").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         return http.build();
