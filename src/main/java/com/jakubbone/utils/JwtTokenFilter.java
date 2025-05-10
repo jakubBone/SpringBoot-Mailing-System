@@ -29,7 +29,7 @@ import java.util.List;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Log4j2
 public class JwtTokenFilter extends OncePerRequestFilter {
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
     public JwtTokenFilter(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
