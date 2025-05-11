@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 public class LoginController {
     private final PasswordEncoder encoder;
     private final UserRepository userRepository;

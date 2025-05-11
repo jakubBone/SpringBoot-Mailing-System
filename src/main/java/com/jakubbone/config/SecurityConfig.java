@@ -33,8 +33,8 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(("api/messages")).hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/login", "/api/register", "/api/info", "api/uptime").permitAll()
+                        .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/v1/login", "/api/v1/register", "/api/v1/info", "api/v1/uptime").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
