@@ -38,10 +38,10 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login/impersonate").hasRole("ADMIN")
-                        .requestMatchers("/logout/impersonate").authenticated()
+                        .requestMatchers("/login/v1/impersonate").hasRole("ADMIN")
+                        .requestMatchers("/logout/v1/impersonate").authenticated()
                         .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/v1/login", "/api/v1/register", "/api/v1/info", "api/v1/uptime").permitAll()
+                        .requestMatchers("/api/v1/login", "/api/v1/register", "/api/v1/info", "/api/v1/uptime").permitAll()
                         .anyRequest().authenticated()
                 )
 
