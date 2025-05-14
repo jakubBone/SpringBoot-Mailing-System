@@ -8,10 +8,13 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.switchuser.SwitchUserFilter;
 
 /**
  * Security configuration enabling JWT filter and method security.
@@ -22,9 +25,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.userDetailsService = userDetailsService;
     }
 
     @Bean
@@ -33,12 +38,26 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/login/impersonate").hasRole("ADMIN")
+                        .requestMatchers("/logout/impersonate").authenticated()
                         .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/v1/login", "/api/v1/register", "/api/v1/info", "api/v1/uptime").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+
+                .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(switchUserFilter(userDetailsService), FilterSecurityInterceptor.class);
         return http.build();
+    }
+
+    @Bean
+    public SwitchUserFilter switchUserFilter(UserDetailsService userDetailsService) {
+        SwitchUserFilter filter = new SwitchUserFilter();
+        filter.setUserDetailsService(userDetailsService);
+        filter.setSwitchUserUrl("/login/impersonate");
+        filter.setExitUserUrl("/logout/impersonate");
+        filter.setTargetUrl("/");  // after switch return to main page
+        return filter;
     }
 
     @Bean
