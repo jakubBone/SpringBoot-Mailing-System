@@ -25,26 +25,23 @@ import org.springframework.security.web.authentication.switchuser.SwitchUserFilt
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailsService userDetailsService;
 
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService) {
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.userDetailsService = userDetailsService;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, UserDetailsService userDetailsService) throws Exception {
         http.csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("api/login/v1/impersonate").hasRole("ADMIN")
-                        .requestMatchers("api/logout/v1/impersonate").authenticated()
+                        .requestMatchers("/api/login/v1/impersonate").hasRole("ADMIN")
+                        .requestMatchers("/api/logout/v1/impersonate").authenticated()
                         .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/v1/login", "/api/v1/register", "/api/v1/info", "/api/v1/uptime").permitAll()
                         .anyRequest().authenticated()
                 )
-
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(switchUserFilter(userDetailsService), FilterSecurityInterceptor.class);
         return http.build();
@@ -54,9 +51,10 @@ public class SecurityConfig {
     public SwitchUserFilter switchUserFilter(UserDetailsService userDetailsService) {
         SwitchUserFilter filter = new SwitchUserFilter();
         filter.setUserDetailsService(userDetailsService);
-        filter.setSwitchUserUrl("/login/impersonate");
-        filter.setExitUserUrl("/logout/impersonate");
-        filter.setTargetUrl("/");  // after switch return to main page
+        filter.setSwitchUserUrl("/api/login/v1/impersonate");
+        filter.setExitUserUrl("/api/logout/v1/impersonate");
+        filter.setTargetUrl("/");
+        filter.setExitUserUrl("/");
         return filter;
     }
 
