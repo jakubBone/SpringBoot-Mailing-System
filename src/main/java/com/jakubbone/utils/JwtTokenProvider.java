@@ -22,11 +22,28 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
-                .setSubject(username)         // set token subject (username)
-                .claim("role", role)       // own field (role)
-                .setIssuedAt(now)             // release time
-                .setExpiration(expiryDate)    // expiration time
-                .signWith(SignatureAlgorithm.HS512, secretKey)  // sign with HS512 algorithm and secret
+                .setSubject(username)
+                .claim("role", role)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, secretKey)
                 .compact();
     }
+
+    public String createImpersonationToken(String adminUsername, String targetUsername, String targetRole){
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expirationMillis);
+
+        return Jwts.builder()
+                .setSubject(targetUsername)
+                .claim("role", targetRole)
+                .claim("impersonatedBy", adminUsername)
+                .claim("isImpersonated", true)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, secretKey)
+                .compact();
+    }
+
+
 }
