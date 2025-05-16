@@ -28,7 +28,7 @@ public class ImpersonationController {
     }
 
     @PostMapping("/logout/impersonate")
-    public ResponseEntity<?> exitImpersonate(@RequestParam String tergetUsername, Authentication authentication){
+    public ResponseEntity<?> exitImpersonate(@RequestParam String targetUsername, Authentication authentication){
 
     }
 
