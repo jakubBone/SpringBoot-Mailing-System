@@ -1,29 +1,40 @@
 package com.jakubbone.controller;
 
-import com.jakubbone.dto.LoginRequest;
-import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.repository.UserRepository;
-import com.jakubbone.utils.JwtTokenProvider;
+import com.jakubbone.service.ImpersonationService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/v1")
 public class ImpersonationController {
-    private final PasswordEncoder encoder;
     private final UserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final ImpersonationService impersonationService;
 
-    public ImpersonationController(PasswordEncoder encoder, UserRepository userRepository, JwtTokenProvider jwtTokenProvider) {
-        this.encoder = encoder;
+    public ImpersonationController(UserRepository userRepository, ImpersonationService impersonationService) {
         this.userRepository = userRepository;
-        this.jwtTokenProvider = jwtTokenProvider;
+        this.impersonationService = impersonationService;
     }
 
     @PostMapping("/login/impersonate")
     public ResponseEntity<?> impersonate(@RequestParam String targetUsername, Authentication authentication){
+        boolean isAdmin = authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .anyMatch(a -> a.equals("ROLE_ADMIN"));
+
+        if(!isAdmin){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admin role required");
+        }
+
+        String token = impersonationService.impersonateUser(authentication.getName(), targetUsername);
+        Map<String, String> responseBody = Collections.singletonMap("token", token);
+        return ResponseEntity.ok(responseBody);
 
     }
 
