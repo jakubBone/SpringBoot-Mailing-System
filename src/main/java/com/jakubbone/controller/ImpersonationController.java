@@ -26,7 +26,7 @@ public class ImpersonationController {
     public ResponseEntity<?> impersonate(@RequestParam String targetUsername, Authentication authentication){
         boolean isAdmin = authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
-                        .anyMatch(a -> a.equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.equals("ROLE_ADMIN"));
 
         if(!isAdmin){
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admin role required");
@@ -39,8 +39,18 @@ public class ImpersonationController {
     }
 
     @PostMapping("/logout/impersonate")
-    public ResponseEntity<?> exitImpersonate(@RequestParam String targetUsername, Authentication authentication){
+    public ResponseEntity<?> exitImpersonate(Authentication authentication){
+        boolean isPreviousAdmin = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_PREVIOUS_ADMIN"));
 
+        if(!isPreviousAdmin){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not in impersonated mode");
+        }
+
+        String token = impersonationService.exitImpersonateUser(authentication.getName());
+
+        Map<String, String> responseBody = Collections.singletonMap("token", token);
+        return ResponseEntity.ok(responseBody);
     }
-
 }
