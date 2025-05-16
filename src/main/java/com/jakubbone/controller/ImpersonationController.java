@@ -14,11 +14,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("api/v1")
 public class ImpersonationController {
-    private final UserRepository userRepository;
     private final ImpersonationService impersonationService;
 
-    public ImpersonationController(UserRepository userRepository, ImpersonationService impersonationService) {
-        this.userRepository = userRepository;
+    public ImpersonationController(ImpersonationService impersonationService) {
         this.impersonationService = impersonationService;
     }
 
