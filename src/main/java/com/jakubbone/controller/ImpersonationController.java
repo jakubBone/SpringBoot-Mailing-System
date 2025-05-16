@@ -7,10 +7,7 @@ import com.jakubbone.utils.JwtTokenProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/v1")
@@ -26,7 +23,12 @@ public class ImpersonationController {
     }
 
     @PostMapping("/login/impersonate")
-    public ResponseEntity<?> impersonate(@RequestBody LoginRequest req, Authentication authentication){
+    public ResponseEntity<?> impersonate(@RequestParam String targetUsername, Authentication authentication){
+
+    }
+
+    @PostMapping("/logout/impersonate")
+    public ResponseEntity<?> exitImpersonate(@RequestParam String tergetUsername, Authentication authentication){
 
     }
 
