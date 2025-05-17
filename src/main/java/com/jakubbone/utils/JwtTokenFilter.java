@@ -47,16 +47,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         .parseClaimsJws(token)
                         .getBody();
 
-
                 String username = claims.getSubject();
                 String role = claims.get("role", String.class);
 
-                boolean isImpersonated = claims.containsKey("isImpersonated");
-
-                if(isImpersonated || request.getRequestURI().startsWith("api/admin")){
-                    role = "ROLE_PREVIOUS_ADMINISTRATOR";
-                }
-
+                System.out.println("!!!!!!!!!!!!!!!!!!!!" + role);
                 addAuthorizationToContext(username, role);
 
             } catch (JwtException | IllegalArgumentException ex) {

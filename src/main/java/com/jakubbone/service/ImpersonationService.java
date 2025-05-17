@@ -25,11 +25,7 @@ public class ImpersonationService {
         User targetUser = userRepository.findByUsername(targetUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + targetUsername));
 
-        String token = jwtTokenProvider.createImpersonationToken(
-                targetUser.getUsername(),
-                String.valueOf(targetUser.getRole()
-        ));
-        return token;
+        return jwtTokenProvider.createImpersonationToken(targetUser.getUsername());
     }
 
     public String exitImpersonateUser(String adminUsername){
@@ -38,8 +34,8 @@ public class ImpersonationService {
 
         String token = jwtTokenProvider.createToken(
                 adminUser.getUsername(),
-                String.valueOf(adminUser.getRole()
-        ));
+                String.valueOf(adminUser.getRole())
+        );
         return token;
     }
 }

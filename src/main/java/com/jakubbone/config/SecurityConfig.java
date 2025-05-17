@@ -35,8 +35,8 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(("/api/admin/v1/login/impersonate")).hasRole("ADMIN")
-                        .requestMatchers(("/api/admin/v1/logout/impersonate")).hasAuthority("ROLE_PREVIOUS_ADMIN")
-                        .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(("/api/admin/v1/logout/impersonate")).hasRole("PREVIOUS_ADMINISTRATOR")
+                        .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN", "PREVIOUS_ADMINISTRATOR")
                         .requestMatchers("/api/v1/login", "/api/v1/register", "/api/v1/info", "/api/v1/uptime").permitAll()
                         .anyRequest().authenticated()
                 )
