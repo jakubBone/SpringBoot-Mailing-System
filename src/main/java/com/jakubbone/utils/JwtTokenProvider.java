@@ -1,5 +1,6 @@
 package com.jakubbone.utils;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.Getter;
@@ -30,20 +31,18 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String createImpersonationToken(String adminUsername, String targetUsername, String targetRole){
+    public String createImpersonationToken(String targetUsername, String targetRole){
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
                 .setSubject(targetUsername)
                 .claim("role", targetRole)
-                .claim("impersonatedBy", adminUsername)
                 .claim("isImpersonated", true)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS512, secretKey)
                 .compact();
     }
-
 
 }
