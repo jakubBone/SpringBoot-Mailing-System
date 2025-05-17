@@ -31,13 +31,13 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String createImpersonationToken(String targetUsername, String targetRole){
+    public String createImpersonationToken(String targetUsername){
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
                 .setSubject(targetUsername)
-                .claim("role", targetRole)
+                .claim("role", "PREVIOUS_ADMINISTRATOR")
                 .claim("isImpersonated", true)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
