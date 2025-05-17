@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/v1")
+@RequestMapping("api/admin/v1")
 public class ImpersonationController {
     private final ImpersonationService impersonationService;
 
@@ -30,7 +30,7 @@ public class ImpersonationController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Admin role required");
         }
 
-        String token = impersonationService.impersonateUser(authentication.getName(), targetUsername);
+        String token = impersonationService.impersonateUser(targetUsername);
         Map<String, String> responseBody = Collections.singletonMap("token", token);
         return ResponseEntity.ok(responseBody);
 
@@ -40,7 +40,7 @@ public class ImpersonationController {
     public ResponseEntity<?> exitImpersonate(Authentication authentication){
         boolean isPreviousAdmin = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(a -> a.equals("ROLE_PREVIOUS_ADMIN"));
+                .anyMatch(a -> a.equals("ROLE_PREVIOUS_ADMINISTRATOR"));
 
         if(!isPreviousAdmin){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not in impersonated mode");

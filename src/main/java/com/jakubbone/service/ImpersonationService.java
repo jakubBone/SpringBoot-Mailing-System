@@ -21,26 +21,25 @@ public class ImpersonationService {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    public String impersonateUser(String adminUsername, String targetUsername){
+    public String impersonateUser(String targetUsername){
         User targetUser = userRepository.findByUsername(targetUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + targetUsername));
 
         String token = jwtTokenProvider.createImpersonationToken(
-                adminUsername,
                 targetUser.getUsername(),
                 String.valueOf(targetUser.getRole()
-        );
+        ));
         return token;
     }
 
     public String exitImpersonateUser(String adminUsername){
-        User targetUser = userRepository.findByUsername(adminUsername)
+        User adminUser = userRepository.findByUsername(adminUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found"));
 
         String token = jwtTokenProvider.createToken(
-                targetUser.getUsername(),
-                String.valueOf(targetUser.getRole()
-        );
+                adminUser.getUsername(),
+                String.valueOf(adminUser.getRole()
+        ));
         return token;
     }
 }
