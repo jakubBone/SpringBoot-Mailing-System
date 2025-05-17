@@ -50,7 +50,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 String username = claims.getSubject();
                 String role = claims.get("role", String.class);
 
-                System.out.println("!!!!!!!!!!!!!!!!!!!!" + role);
                 addAuthorizationToContext(username, role);
 
             } catch (JwtException | IllegalArgumentException ex) {
