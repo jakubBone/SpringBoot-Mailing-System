@@ -50,7 +50,7 @@ class LoginControllerTest {
         //req.setUsername("testUser");
         //req.setPassword();
 
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/v1/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
@@ -61,7 +61,7 @@ class LoginControllerTest {
     void shouldReturn401_whenUsernameIncorrect(@Autowired MockMvc mockMvc) throws Exception {
         LoginRequest req = new LoginRequest("incorrectUsername", "testPassword" );
 
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/v1/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
@@ -72,7 +72,7 @@ class LoginControllerTest {
     void shouldReturnOk_CredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
         LoginRequest req = new LoginRequest("testUser", "testPassword");
 
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/v1/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
@@ -84,7 +84,7 @@ class LoginControllerTest {
         LoginRequest req = new LoginRequest("testUser", "testPassword");
 
 
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/v1/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
