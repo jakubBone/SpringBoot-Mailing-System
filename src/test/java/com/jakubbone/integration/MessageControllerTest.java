@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class MessageControllerTest {
     @Autowired
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper;
 
     @Autowired
     UserRepository userRepository;
@@ -47,9 +47,9 @@ class MessageControllerTest {
 
     @BeforeEach
     void setup() {
+        mapper = new ObjectMapper();
         messageRepository.deleteAll();
         userRepository.deleteAll();
-
         User testUser = new User("testUser", passwordEncoder.encode("testPassword"), "USER");
         User testAdmin = new User("testAdmin", passwordEncoder.encode("testPassword"), "ADMIN");
         userRepository.save(testUser);
