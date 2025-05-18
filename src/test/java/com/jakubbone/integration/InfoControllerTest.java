@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class InfoControllerTest {
 	@Test
 	void shouldReturnApplicationVersion(@Autowired MockMvc mockMvc) throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/info"))
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/info"))
 				.andDo(MockMvcResultHandlers.print())
 				.andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(
@@ -29,7 +29,7 @@ class InfoControllerTest {
 
 	@Test
 	void shouldReturnApplicationUptime(@Autowired MockMvc mockMvc) throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get("/api/uptime"))
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/uptime"))
 				.andDo(MockMvcResultHandlers.print())
 				.andExpect(MockMvcResultMatchers.status().isOk())
 				.andExpect(MockMvcResultMatchers.content().contentType(

@@ -62,7 +62,7 @@ class MessageControllerTest {
     @Test
     void shouldReturn201_whenAdminValidToken(@Autowired MockMvc mockMvc) throws Exception {
         SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
-        mockMvc.perform(post("/api/messages")
+        mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
@@ -78,7 +78,7 @@ class MessageControllerTest {
     @Test
     void shouldReturn401_whenUserValidToken(@Autowired MockMvc mockMvc) throws Exception {
         SendMessageRequest req = new SendMessageRequest("testAdmin", "Hello admin!");
-        mockMvc.perform(post("/api/messages")
+        mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
@@ -95,7 +95,7 @@ class MessageControllerTest {
     void shouldReturn404_whenRecipientNotFound(@Autowired MockMvc mockMvc) throws Exception {
         SendMessageRequest req = new SendMessageRequest("unknown", "Hello unknown!");
 
-        mockMvc.perform(post("/api/messages")
+        mockMvc.perform(post("/api/v1/messages")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(mapper.writeValueAsBytes(req)))
@@ -108,7 +108,7 @@ class MessageControllerTest {
     void shouldReturn404_whenNoContent(@Autowired MockMvc mockMvc) throws Exception {
         SendMessageRequest req = new SendMessageRequest("testUser", "");
 
-        mockMvc.perform(post("/api/messages")
+        mockMvc.perform(post("/api/v1/messages")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(mapper.writeValueAsBytes(req)))
