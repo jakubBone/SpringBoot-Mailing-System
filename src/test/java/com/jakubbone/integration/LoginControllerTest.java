@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc // MockMvc injection for HTTP requests sending without server running
 class LoginControllerTest {
     @Autowired
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper;
 
     @Autowired
     UserRepository userRepository;
@@ -39,6 +39,7 @@ class LoginControllerTest {
 
     @BeforeEach
     void setup() {
+        mapper = new ObjectMapper();
         userRepository.deleteAll();
         User testUser = new User("testUser", passwordEncoder.encode("testPassword"), "USER");
         userRepository.save(testUser);
