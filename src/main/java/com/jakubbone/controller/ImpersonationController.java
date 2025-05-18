@@ -1,6 +1,5 @@
 package com.jakubbone.controller;
 
-import com.jakubbone.repository.UserRepository;
 import com.jakubbone.service.ImpersonationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
