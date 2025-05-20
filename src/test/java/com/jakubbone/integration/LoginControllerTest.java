@@ -36,10 +36,8 @@ class LoginControllerTest {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-
     @BeforeEach
     void setup() {
-        mapper = new ObjectMapper();
         userRepository.deleteAll();
         User testUser = new User("testUser", passwordEncoder.encode("testPassword"), "USER");
         userRepository.save(testUser);
@@ -48,8 +46,6 @@ class LoginControllerTest {
     @Test
     void shouldReturn401_whenPasswordIncorrect(@Autowired MockMvc mockMvc) throws Exception {
         LoginRequest req = new LoginRequest("testUser","incorrectPassword" );
-        //req.setUsername("testUser");
-        //req.setPassword();
 
         mockMvc.perform(post("/api/v1/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -70,7 +66,7 @@ class LoginControllerTest {
     }
 
     @Test
-    void shouldReturnOk_CredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
+    void shouldReturnOk_whenCredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
         LoginRequest req = new LoginRequest("testUser", "testPassword");
 
         mockMvc.perform(post("/api/v1/login")
@@ -81,9 +77,8 @@ class LoginControllerTest {
     }
 
     @Test
-    void shouldReturnToken_CredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
+    void shouldReturnToken_whenCredentialsCorrect(@Autowired MockMvc mockMvc) throws Exception {
         LoginRequest req = new LoginRequest("testUser", "testPassword");
-
 
         mockMvc.perform(post("/api/v1/login")
                         .contentType(MediaType.APPLICATION_JSON)

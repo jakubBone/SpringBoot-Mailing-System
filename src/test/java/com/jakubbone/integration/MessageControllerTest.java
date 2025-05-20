@@ -47,14 +47,12 @@ class MessageControllerTest {
 
     @BeforeEach
     void setup() {
-        mapper = new ObjectMapper();
         messageRepository.deleteAll();
         userRepository.deleteAll();
         User testUser = new User("testUser", passwordEncoder.encode("testPassword"), "USER");
         User testAdmin = new User("testAdmin", passwordEncoder.encode("testPassword"), "ADMIN");
         userRepository.save(testUser);
         userRepository.save(testAdmin);
-
         userToken = jwtTokenProvider.createToken(testUser.getUsername(), String.valueOf(testUser.getRole()));
         adminToken = jwtTokenProvider.createToken(testAdmin.getUsername(), String.valueOf(testAdmin.getRole()));
     }
