@@ -30,6 +30,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, UserDetailsService userDetailsService) throws Exception {
+        // Stateless REST API using JWT tokens only (no cookies/session)
+        // CSRF protection is not needed here
+        // Disable it to avoid 403 code on POST/PUT/DELETE
         http.csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
