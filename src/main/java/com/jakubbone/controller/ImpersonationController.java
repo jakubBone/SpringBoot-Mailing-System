@@ -19,7 +19,7 @@ public class ImpersonationController {
         this.impersonationService = impersonationService;
     }
 
-    @PostMapping("/login/impersonate")
+    @PostMapping("/login/impersonation")
     public ResponseEntity<?> impersonate(@RequestParam String targetUsername, Authentication authentication){
         boolean isAdmin = authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
@@ -35,7 +35,7 @@ public class ImpersonationController {
 
     }
 
-    @PostMapping("/logout/impersonate")
+    @PostMapping("/logout/impersonation")
     public ResponseEntity<?> exitImpersonate(Authentication authentication){
         boolean isPreviousAdmin = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
