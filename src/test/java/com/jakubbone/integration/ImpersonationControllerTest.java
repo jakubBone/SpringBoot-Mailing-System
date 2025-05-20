@@ -58,7 +58,7 @@ class ImpersonationControllerTest {
 
     @Test
     void shouldReturnOk_ImpersonationLogin_WhenAuthorized(@Autowired MockMvc mockMvc) throws Exception {
-        mockMvc.perform(post("/api/admin/v1/login/impersonate")
+        mockMvc.perform(post("/api/admin/v1/login/impersonation")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                     .param("targetUsername", "testUser"))
@@ -68,7 +68,7 @@ class ImpersonationControllerTest {
 
     @Test
     void shouldReturn403__ImpersonationLogin_WhenNotAdmin(@Autowired MockMvc mockMvc) throws Exception {
-        mockMvc.perform(post("/api/admin/v1/login/impersonate")
+        mockMvc.perform(post("/api/admin/v1/login/impersonation")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                     .param("targetUsername", "adminUser"))
@@ -78,7 +78,7 @@ class ImpersonationControllerTest {
 
     @Test
     void shouldReturn403_ImpersonationLogin_WhenTargetUserNotFound(@Autowired MockMvc mockMvc) throws Exception {
-        mockMvc.perform(post("/api/admin/v1/login/impersonate")
+        mockMvc.perform(post("/api/admin/v1/login/impersonation")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                     .param("targetUsername", "anotherUser"))
@@ -88,7 +88,7 @@ class ImpersonationControllerTest {
 
     @Test
     void shouldReturn500_ImpersonationLogin_WhenNoParams(@Autowired MockMvc mockMvc) throws Exception {
-        mockMvc.perform(post("/api/admin/v1/login/impersonate")
+        mockMvc.perform(post("/api/admin/v1/login/impersonation")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE))
                 // without targetUser param
@@ -98,7 +98,7 @@ class ImpersonationControllerTest {
 
     @Test
     void shouldReturn500_ImpersonationLogin_WhenNoToken(@Autowired MockMvc mockMvc) throws Exception {
-        mockMvc.perform(post("/api/admin/v1/login/impersonate")
+        mockMvc.perform(post("/api/admin/v1/login/impersonation")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer ")
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                         .param("targetUsername", "testUser"))
@@ -110,7 +110,7 @@ class ImpersonationControllerTest {
 
     @Test
     void shouldReturnOk_ImpersonationLogout_WhenAuthorized(@Autowired MockMvc mockMvc) throws Exception {
-        mockMvc.perform(post("/api/admin/v1/logout/impersonate")
+        mockMvc.perform(post("/api/admin/v1/logout/impersonation")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + impersonatedAdminToken)
                     .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -120,7 +120,7 @@ class ImpersonationControllerTest {
 
     @Test
     void shouldReturn500_ImpersonationLogout_WhenInvalidToken(@Autowired MockMvc mockMvc) throws Exception {
-        mockMvc.perform(post("/api/admin/v1/login/impersonate")
+        mockMvc.perform(post("/api/admin/v1/login/impersonation")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE))
                 .andDo(MockMvcResultHandlers.print())
@@ -129,7 +129,7 @@ class ImpersonationControllerTest {
 
     @Test
     void shouldReturn500_ImpersonationLogout_WhenNoToken(@Autowired MockMvc mockMvc) throws Exception {
-        mockMvc.perform(post("/api/admin/v1/login/impersonate")
+        mockMvc.perform(post("/api/admin/v1/login/impersonation")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer ")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
