@@ -1,5 +1,6 @@
 package com.jakubbone.config;
 
+import com.jakubbone.service.CustomOAuth2UserService;
 import com.jakubbone.utils.JwtTokenFilter;
 import com.jakubbone.utils.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
@@ -24,12 +25,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
 
-    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+    private final CustomOAuth2UserService customOAuth2UserService;
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider, CustomOAuth2UserService customOAuth2UserService) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.customOAuth2UserService = customOAuth2UserService;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, UserDetailsService userDetailsService) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // Stateless REST API using JWT tokens only (no cookies/session)
         // CSRF protection is not needed here
         // Disable it to avoid 403 code on POST/PUT/DELETE
@@ -40,8 +43,13 @@ public class SecurityConfig {
                         .requestMatchers(("/api/admin/v1/login/impersonation")).hasRole("ADMIN")
                         .requestMatchers(("/api/admin/v1/logout/impersonation")).hasRole("PREVIOUS_ADMINISTRATOR")
                         .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN", "PREVIOUS_ADMINISTRATOR")
-                        .requestMatchers("/api/v1/login", "/api/v1/register", "/api/v1/info", "/api/v1/uptime").permitAll()
+                        .requestMatchers("/api/v1/info", "/api/v1/uptime").permitAll()
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
                 )
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         return http.build();
