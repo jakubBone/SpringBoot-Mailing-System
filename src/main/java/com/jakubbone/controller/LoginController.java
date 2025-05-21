@@ -34,7 +34,6 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         String username = req.getUsername();
-        String password = req.getPassword();
 
         Optional<User> userOpt = userRepository.findByUsername(username);
 
@@ -43,10 +42,6 @@ public class LoginController {
         }
 
         User user = userOpt.get();
-
-        if (!encoder.matches(password, user.getPasswordHash())){
-            return ResponseHandler.error(HttpStatus.UNAUTHORIZED, "Invalid username or password");
-        }
 
         String token = jwtTokenProvider.createToken(user.getUsername(), String.valueOf(user.getRole()));
         Map<String, String> responseBody = Collections.singletonMap("token", token);
