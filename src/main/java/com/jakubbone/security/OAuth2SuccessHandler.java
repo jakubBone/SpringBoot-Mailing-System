@@ -11,21 +11,23 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * Handles successful OAuth2 authentication by generating a JWT token for the authenticated user
+ * Used to integrate GitHub OAuth2 login with the application's own JWT-based authorization
+ * Returns the token in a JSON response
+ */
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private ObjectMapper objectMapper;
 
     public OAuth2SuccessHandler(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -45,10 +47,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         String token = jwtTokenProvider.createToken(user.getUsername(), user.getRole().name());
 
-
         Map<String, String> responseBody = Collections.singletonMap("token", token);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        objectMapper.writeValue(response.getWriter(), responseBody);
+        new ObjectMapper().writeValue(response.getWriter(), responseBody);
     }
 }
