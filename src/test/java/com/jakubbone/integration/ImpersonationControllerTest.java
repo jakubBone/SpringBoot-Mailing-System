@@ -25,13 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class ImpersonationControllerTest {
     @Autowired
-    ObjectMapper mapper;
-
-    @Autowired
     UserRepository userRepository;
-
-    @Autowired
-    PasswordEncoder passwordEncoder;
 
     @Autowired
     JwtTokenProvider jwtTokenProvider;
@@ -43,10 +37,9 @@ class ImpersonationControllerTest {
 
     @BeforeEach
     void setup() {
-        mapper = new ObjectMapper();
         userRepository.deleteAll();
-        User testUser = new User("testUser", passwordEncoder.encode("testPassword"), "USER");
-        User testAdmin = new User("testAdmin", passwordEncoder.encode("testPassword"), "ADMIN");
+        User testUser = new User("testUser", "USER", "GITHUB");
+        User testAdmin = new User("testAdmin", "ADMIN", "LOCAL");
         userRepository.save(testUser);
         userRepository.save(testAdmin);
         adminToken = jwtTokenProvider.createToken("testAdmin", "ADMIN");

@@ -47,6 +47,4 @@ public class LoginController {
         Map<String, String> responseBody = Collections.singletonMap("token", token);
         return ResponseEntity.ok(responseBody);
     }
-
-
 }

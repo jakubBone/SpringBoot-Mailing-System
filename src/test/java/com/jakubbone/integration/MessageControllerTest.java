@@ -13,7 +13,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
@@ -37,9 +36,6 @@ class MessageControllerTest {
     MessageRepository messageRepository;
 
     @Autowired
-    PasswordEncoder passwordEncoder;
-
-    @Autowired
     JwtTokenProvider jwtTokenProvider;
 
     String adminToken;
@@ -49,8 +45,8 @@ class MessageControllerTest {
     void setup() {
         messageRepository.deleteAll();
         userRepository.deleteAll();
-        User testUser = new User("testUser", passwordEncoder.encode("testPassword"), "USER");
-        User testAdmin = new User("testAdmin", passwordEncoder.encode("testPassword"), "ADMIN");
+        User testUser = new User("testUser", "USER", "LOCAL");
+        User testAdmin = new User("testAdmin", "ADMIN", "GITHUB");
         userRepository.save(testUser);
         userRepository.save(testAdmin);
         userToken = jwtTokenProvider.createToken(testUser.getUsername(), String.valueOf(testUser.getRole()));
@@ -99,7 +95,6 @@ class MessageControllerTest {
                     .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isNotFound());
-
     }
 
     @Test
