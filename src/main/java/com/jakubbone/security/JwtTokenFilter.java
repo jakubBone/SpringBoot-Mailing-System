@@ -1,4 +1,4 @@
-package com.jakubbone.utils;
+package com.jakubbone.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

@@ -5,7 +5,7 @@ import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.model.User;
 import com.jakubbone.repository.MessageRepository;
 import com.jakubbone.repository.UserRepository;
-import com.jakubbone.utils.JwtTokenProvider;
+import com.jakubbone.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
