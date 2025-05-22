@@ -38,8 +38,8 @@ FILE: SecurityConfig.java
 
 package com.jakubbone.config;
 
-import com.jakubbone.utils.JwtTokenFilter;
-import com.jakubbone.utils.JwtTokenProvider;
+import com.jakubbone.security.JwtTokenFilter;
+import com.jakubbone.security.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -190,7 +190,7 @@ package com.jakubbone.controller;
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
 import com.jakubbone.repository.UserRepository;
-import com.jakubbone.utils.JwtTokenProvider;
+import com.jakubbone.security.JwtTokenProvider;
 import com.jakubbone.utils.ResponseHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -519,7 +519,7 @@ package com.jakubbone.service;
 
 import com.jakubbone.model.User;
 import com.jakubbone.repository.UserRepository;
-import com.jakubbone.utils.JwtTokenProvider;
+import com.jakubbone.security.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -812,7 +812,7 @@ package com.jakubbone.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jakubbone.model.User;
 import com.jakubbone.repository.UserRepository;
-import com.jakubbone.utils.JwtTokenProvider;
+import com.jakubbone.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 
 import org.junit.jupiter.api.Test;
@@ -1094,7 +1094,7 @@ import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.model.User;
 import com.jakubbone.repository.MessageRepository;
 import com.jakubbone.repository.UserRepository;
-import com.jakubbone.utils.JwtTokenProvider;
+import com.jakubbone.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1229,7 +1229,7 @@ import com.jakubbone.controller.LoginController;
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.model.User;
 import com.jakubbone.repository.UserRepository;
-import com.jakubbone.utils.JwtTokenProvider;
+import com.jakubbone.security.JwtTokenProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
