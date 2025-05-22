@@ -28,8 +28,8 @@ public class MessageServiceImpl implements MessageService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient not found"));
 
         Message msg = new Message();
-        msg.setSender(sender);
-        msg.setRecipient(recipient);
+        msg.setSenderUsername(sender.getUsername());
+        msg.setRecipientUsername(recipient.getUsername());
         msg.setContent(content);
         msg.setTimestamp(LocalDateTime.now());
 

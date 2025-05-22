@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -11,23 +12,22 @@ import java.time.LocalDateTime;
 @Table(name = "messages")
 @Getter
 @Setter
-@NoArgsConstructor // JPA/Hibernate require to create object getting from DB
+@NoArgsConstructor
 public class Message {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-generated
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne(optional = false) // Relation to User Entity
-    @JoinColumn(name = "senderId")
-    private User sender;
+    @Column(name = "sender_id", nullable = false)
+    private String senderUsername;
 
-    @ManyToOne(optional = false) // Relation to User Entity
-    @JoinColumn(name = "recipientId")
-    private User recipient;
+    @Column(name = "recipient_id", nullable = false)
+    private String recipientUsername;
 
     @Column(nullable = false)
     private String content;
 
+    @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime timestamp;
 }

@@ -43,10 +43,9 @@ public class SecurityConfig {
                         .requestMatchers( "/api/v1/info", "/api/v1/uptime").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(oauth2 -> oauth2
-                                .successHandler(oAuth2SuccessHandler)
-                )
-                .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt() // automatyczna weryfikacja tokena JWT z Keycloak!
+                );
         return http.build();
     }
 }
