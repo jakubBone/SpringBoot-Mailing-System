@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,8 +29,10 @@ public class MessageController {
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){
-        String senderUsername = authentication.getName();
-        Message savedMessage = messageService.sendMessage(senderUsername, req.getTo(), req.getText());
+        JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
+        String sender = jwt.getToken().getClaim("preferred_username");
+
+        Message savedMessage = messageService.sendMessage(sender, req.getTo(), req.getText());
         return ResponseHandler.success(HttpStatus.CREATED, savedMessage);
     }
 }
