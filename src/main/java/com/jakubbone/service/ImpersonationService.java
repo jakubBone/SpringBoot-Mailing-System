@@ -46,7 +46,4 @@ public class ImpersonationService {
         return accessToken;
     }
 
-    public String exitImpersonateUser(){
-
-    }
 }

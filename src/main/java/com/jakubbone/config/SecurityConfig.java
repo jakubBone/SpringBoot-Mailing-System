@@ -30,18 +30,14 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(("/api/admin/v1/login/impersonation")).hasRole("ADMIN")
-                        .requestMatchers(("/api/admin/v1/logout/impersonation")).hasRole("PREVIOUS_ADMINISTRATOR")
-                        .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN", "PREVIOUS_ADMINISTRATOR")
+                        .requestMatchers(("/api/v1/impersonation")).hasRole("ADMIN")
+                        .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN")
                         .requestMatchers( "/api/v1/info", "/api/v1/uptime").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 );
-                /*.oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt() // automatic JWT token verification with Keycloak
-                );*/
         return http.build();
     }
 
