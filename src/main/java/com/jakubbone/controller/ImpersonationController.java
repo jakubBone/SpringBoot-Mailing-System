@@ -13,7 +13,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("api/admin/v1")
 public class ImpersonationController {
-    private final ImpersonationService impersonationService;
+    /*private final ImpersonationService impersonationService;
 
     public ImpersonationController(ImpersonationService impersonationService) {
         this.impersonationService = impersonationService;
@@ -49,5 +49,5 @@ public class ImpersonationController {
 
         Map<String, String> responseBody = Collections.singletonMap("token", token);
         return ResponseEntity.ok(responseBody);
-    }
+    }*/
 }

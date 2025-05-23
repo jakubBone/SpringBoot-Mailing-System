@@ -2,14 +2,13 @@ package com.jakubbone.service;
 
 import com.jakubbone.model.User;
 import com.jakubbone.repository.UserRepository;
-import com.jakubbone.security.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ImpersonationService {
-    private final UserRepository userRepository;
+    /*private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
     public ImpersonationService(UserRepository userRepository, JwtTokenProvider jwtTokenProvider) {
@@ -33,5 +32,5 @@ public class ImpersonationService {
                 String.valueOf(adminUser.getRole())
         );
         return token;
-    }
+    }*/
 }
