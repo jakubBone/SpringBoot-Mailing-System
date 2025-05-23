@@ -11,27 +11,17 @@ import java.util.Collections;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/admin/v1")
+@RequestMapping("api/v1")
 public class ImpersonationController {
-    /rivate final ImpersonationService impersonationService;
+    private final ImpersonationService impersonationService;
 
     public ImpersonationController(ImpersonationService impersonationService) {
         this.impersonationService = impersonationService;
     }
 
-    @PostMapping("/login/impersonation")
+    @PostMapping("/impersonation")
     public ResponseEntity<?> impersonate(@RequestParam String targetUsername, Authentication authentication){
-
         String token = impersonationService.impersonateUser(targetUsername);
-        Map<String, String> responseBody = Collections.singletonMap("token", token);
-        return ResponseEntity.ok(responseBody);
-
-    }
-
-    @PostMapping("/logout/impersonation")
-    public ResponseEntity<?> exitImpersonate(Authentication authentication){
-        String token = impersonationService.exitImpersonateUser(authentication.getName());
-
         Map<String, String> responseBody = Collections.singletonMap("token", token);
         return ResponseEntity.ok(responseBody);
     }
