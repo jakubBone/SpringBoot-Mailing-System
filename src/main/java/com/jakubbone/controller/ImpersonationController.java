@@ -20,7 +20,7 @@ public class ImpersonationController {
     }
 
     @PostMapping("/impersonation")
-    public ResponseEntity<?> impersonate(@RequestParam String targetUsername, Authentication authentication){
+    public ResponseEntity<?> impersonate(@RequestParam String targetUsername){
         String token = impersonationService.impersonateUser(targetUsername);
         Map<String, String> responseBody = Collections.singletonMap("token", token);
         return ResponseEntity.ok(responseBody);
