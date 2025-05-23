@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 @Service
 public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
-    private final KeycloakUserService keycloakUserService;
+    private final KeycloakService keycloakUserService;
 
-    public MessageServiceImpl(MessageRepository messageRepository, KeycloakUserService keycloakUserService) {
+    public MessageServiceImpl(MessageRepository messageRepository, KeycloakService keycloakUserService) {
         this.messageRepository = messageRepository;
         this.keycloakUserService = keycloakUserService;
     }
@@ -21,11 +21,8 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Message sendMessage(String fromUsername, String toUsername, String content) {
-        if (!keycloakUserService.existsByUsername(fromUsername)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Sender not found");
-        }
         if (!keycloakUserService.existsByUsername(toUsername)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient " + toUsername + " not found");
         }
 
         Message msg = new Message();
