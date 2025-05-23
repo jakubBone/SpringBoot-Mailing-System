@@ -45,5 +45,4 @@ public class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
         return converter;
     }
-
 }

@@ -5,7 +5,6 @@ import com.jakubbone.model.Message;
 import com.jakubbone.service.MessageService;
 import com.jakubbone.utils.ResponseHandler;
 import jakarta.validation.Valid;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
