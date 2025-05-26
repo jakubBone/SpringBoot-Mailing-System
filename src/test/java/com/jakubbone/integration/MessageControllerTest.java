@@ -2,10 +2,7 @@ package com.jakubbone.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jakubbone.dto.SendMessageRequest;
-import com.jakubbone.model.User;
 import com.jakubbone.repository.MessageRepository;
-import com.jakubbone.repository.UserRepository;
-import com.jakubbone.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +27,7 @@ class MessageControllerTest {
     ObjectMapper mapper;
 
     @Autowired
-    UserRepository userRepository;
-
-    @Autowired
     MessageRepository messageRepository;
-
-    @Autowired
-    JwtTokenProvider jwtTokenProvider;
 
     String adminToken;
     String userToken;
@@ -44,13 +35,6 @@ class MessageControllerTest {
     @BeforeEach
     void setup() {
         messageRepository.deleteAll();
-        userRepository.deleteAll();
-        User testUser = new User("testUser", "USER", "LOCAL");
-        User testAdmin = new User("testAdmin", "ADMIN", "GITHUB");
-        userRepository.save(testUser);
-        userRepository.save(testAdmin);
-        userToken = jwtTokenProvider.createToken(testUser.getUsername(), String.valueOf(testUser.getRole()));
-        adminToken = jwtTokenProvider.createToken(testAdmin.getUsername(), String.valueOf(testAdmin.getRole()));
     }
 
     @Test
