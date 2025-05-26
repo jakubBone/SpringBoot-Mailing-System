@@ -2,6 +2,7 @@ package com.jakubbone.controller;
 
 import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.model.Message;
+import com.jakubbone.repository.MessageRepository;
 import com.jakubbone.service.MessageService;
 import com.jakubbone.utils.ResponseHandler;
 import jakarta.validation.Valid;
@@ -9,7 +10,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.lang.Throwable
+        java.lang.Exception
+        java.lang.RuntimeException
+        org.springframework.data.rest.webmvc.ResourceNotFoundException
 
 import java.util.Map;
 
@@ -17,6 +25,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/messages")
 public class MessageController {
     private final MessageService messageService;
+    private final MessageRepository messageRepository;
 
     public MessageController(MessageService messageService) {
         this.messageService = messageService;
@@ -30,4 +39,19 @@ public class MessageController {
         Message savedMessage = messageService.sendMessage(sender, req.getTo(), req.getText());
         return ResponseHandler.success(HttpStatus.CREATED, savedMessage);
     }
+
+    @PatchMapping("/{id}/read")
+    @Transactional
+    public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id) {
+        Message msg = messageRepository.findById(id).
+                orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+
+        if(!msg.isRead()){
+            msg.setRead(true);
+        }
+        return ResponseEntity.noContent().build();
+    }
+
+
+
 }
