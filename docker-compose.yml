@@ -1,27 +1,59 @@
-services:
-  app:
-    build: .
-    container_name: spring-boot-mailing-system
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/spring_db
-      SPRING_DATASOURCE_USERNAME: spring_user
-      SPRING_DATASOURCE_PASSWORD: spring123
-    depends_on:
-      - db
+version: "3.8"
 
-  db:
+services:
+  postgres:
     image: postgres:15-alpine
-    container_name: spring-boot-mailing-system-db
+    restart: always
     environment:
       POSTGRES_DB: spring_db
       POSTGRES_USER: spring_user
       POSTGRES_PASSWORD: spring123
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "spring_user", "-d", "spring_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    command: start-dev --import-realm
+    restart: always
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/spring_db
+      KC_DB_USERNAME: spring_user
+      KC_DB_PASSWORD: spring123
+      KC_FEATURES: token-exchange
+      KC_HOSTNAME: localhost
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8180:8080"
+
+  app:
+    build: .
+    restart: on-failure
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/spring_db
+      SPRING_DATASOURCE_USERNAME: spring_user
+      SPRING_DATASOURCE_PASSWORD: spring123
+
+      KEYCLOAK_BASE_URL: http://keycloak:8180
+      KEYCLOAK_REALM: mailingsystem
+      KEYCLOAK_ADMIN_CLIENT_ID: springboot-mailing-system
+      KEYCLOAK_ADMIN_CLIENT_SECRET: 0HMuCpZQvov7QUl7jVASrBC9AW8nkJFZ
+    depends_on:
+      keycloak:
+        condition: service_started
+    ports:
+      - "8080:8080"
 
 volumes:
   postgres_data:
