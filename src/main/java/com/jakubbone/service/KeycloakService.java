@@ -24,4 +24,6 @@ public class KeycloakService {
         List<UserRepresentation> users = keycloakAdminClient.realm(keycloakRealm).users().search(username);
         return users != null && users.stream().anyMatch(u -> username.equals(u.getUsername()));
     }
+
+
 }

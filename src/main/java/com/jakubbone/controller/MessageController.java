@@ -14,10 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.lang.Throwable
-        java.lang.Exception
-        java.lang.RuntimeException
-        org.springframework.data.rest.webmvc.ResourceNotFoundException
 
 import java.util.Map;
 
@@ -27,9 +23,11 @@ public class MessageController {
     private final MessageService messageService;
     private final MessageRepository messageRepository;
 
-    public MessageController(MessageService messageService) {
+    public MessageController(MessageService messageService, MessageRepository messageRepository) {
         this.messageService = messageService;
+        this.messageRepository = messageRepository;
     }
+
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){

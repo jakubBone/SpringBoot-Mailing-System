@@ -3,6 +3,6 @@ CREATE TABLE messages (
     sender_id VARCHAR NOT NULL,
     recipient_id VARCHAR NOT NULL,
     content TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
     timestamp TIMESTAMP NOT NULL
-
 );
