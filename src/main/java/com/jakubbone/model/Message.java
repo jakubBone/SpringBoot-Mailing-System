@@ -30,4 +30,7 @@ public class Message {
     @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime timestamp;
+
+    private boolean isRead = false;
+
 }
