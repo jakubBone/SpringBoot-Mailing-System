@@ -27,8 +27,6 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/spring_db
       KC_DB_USERNAME: spring_user
       KC_DB_PASSWORD: spring123
-      KC_FEATURES: token-exchange
-      KC_HOSTNAME: localhost
     volumes:
       - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
     depends_on:
@@ -45,7 +43,7 @@ services:
       SPRING_DATASOURCE_USERNAME: spring_user
       SPRING_DATASOURCE_PASSWORD: spring123
 
-      KEYCLOAK_BASE_URL: http://keycloak:8180
+      KEYCLOAK_BASE_URL: http://keycloak:8080
       KEYCLOAK_REALM: mailingsystem
       KEYCLOAK_ADMIN_CLIENT_ID: springboot-mailing-system
       KEYCLOAK_ADMIN_CLIENT_SECRET: 0HMuCpZQvov7QUl7jVASrBC9AW8nkJFZ
