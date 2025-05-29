@@ -1,57 +1,80 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:15-alpine
     restart: always
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: spring_db
-      POSTGRES_USER: spring_user
-      POSTGRES_PASSWORD: spring123
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "spring_user", "-d", "spring_db"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 5
 
   keycloak:
-    image: quay.io/keycloak/keycloak:24.0.1
+    image: quay.io/keycloak/keycloak:26.2.4
     command: start-dev --import-realm
     restart: always
+    env_file:
+      - .env
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/spring_db
-      KC_DB_USERNAME: spring_user
-      KC_DB_PASSWORD: spring123
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+
+      # Address added as "iss"
+      KC_HOSTNAME_URL: http://localhost:8180
+      KC_HOSTNAME_STRICT: "false"   # allows to respond to "keycloak" also
+      KC_PROXY: edge                # accept HTTP in dev mode
     volumes:
-      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+      - type: bind
+        source: ./mailingsystem-realm.json
+        target: /opt/keycloak/data/import/realm-export.json
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "8180:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/realms/mailingsystem" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   app:
     build: .
-    restart: on-failure
+    env_file:
+      - .env
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/spring_db
-      SPRING_DATASOURCE_USERNAME: spring_user
-      SPRING_DATASOURCE_PASSWORD: spring123
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
 
       KEYCLOAK_BASE_URL: http://keycloak:8080
-      KEYCLOAK_REALM: mailingsystem
-      KEYCLOAK_ADMIN_CLIENT_ID: springboot-mailing-system
-      KEYCLOAK_ADMIN_CLIENT_SECRET: 0HMuCpZQvov7QUl7jVASrBC9AW8nkJFZ
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID}
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET}
+
+      # The same in JWT token
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8180/realms/${KEYCLOAK_REALM}
+      # Inner container address
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs
     depends_on:
       keycloak:
         condition: service_started
     ports:
       - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   postgres_data:
