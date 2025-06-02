@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 infra/
 
+
 ### STS ###
 .apt_generated
 .classpath
