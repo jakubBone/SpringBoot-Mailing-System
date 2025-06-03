@@ -143,3 +143,10 @@ Build nad run the application:
 ```bash
 docker-compose up --build
 ```
+
+
+## Keycloak
+
+Keycloak starts with --features=token-exchange:v1,impersonation:v1 because only legacy token-exchange v1 accepts requested_subject,
+letting us mint a JWT for any user without their token—v2 can only down-scope an existing user token. 
+Once v2 gains full impersonation, we’ll simply remove those flags and switch to the standard flow.
