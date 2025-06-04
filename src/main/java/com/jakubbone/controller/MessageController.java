@@ -1,5 +1,6 @@
 package com.jakubbone.controller;
 
+import com.jakubbone.dto.MessageResponse;
 import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.model.Message;
 import com.jakubbone.repository.MessageRepository;
@@ -35,7 +36,8 @@ public class MessageController {
         String sender = jwt.getToken().getClaim("preferred_username");
 
         Message savedMessage = messageService.sendMessage(sender, req.getTo(), req.getText());
-        return ResponseHandler.success(HttpStatus.CREATED, savedMessage);
+        MessageResponse response = MessageResponse.fromEntity(savedMessage);
+        return ResponseHandler.success(HttpStatus.CREATED, response);
     }
 
     @PatchMapping("/{id}/read")
