@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name = "sender_id", nullable = false)
     private String senderUsername;
@@ -32,5 +32,4 @@ public class Message {
     private LocalDateTime timestamp;
 
     private boolean isRead = false;
-
 }
