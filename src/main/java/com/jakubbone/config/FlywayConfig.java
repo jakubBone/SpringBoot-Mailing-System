@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Profile;
  * Usage:
  *   - Enable only in development by activating the "dev" profile via application.properties:
  *       spring.profiles.active=dev
- *   - Or programmatically in your main application:
+ *   - Or programmatically in main application:
  *       SpringApplication app = new SpringApplication(SpringBootMailingApplication.class);
  *       app.setAdditionalProfiles("dev");
  *       app.run(args);
