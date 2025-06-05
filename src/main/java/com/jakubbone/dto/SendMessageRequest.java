@@ -18,5 +18,4 @@ public class SendMessageRequest {
     @NotBlank(message = "Message text cannot be blank")
     @Size(min = 1, max = 256, message = "Message text must be between 1 and 256 characters")
     private String text;
-
 }

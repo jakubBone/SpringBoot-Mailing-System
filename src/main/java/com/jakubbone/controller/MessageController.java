@@ -14,9 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/v1/messages")
 public class MessageController {
@@ -27,7 +24,6 @@ public class MessageController {
         this.messageService = messageService;
         this.messageRepository = messageRepository;
     }
-
 
     @PostMapping
     public ResponseEntity<MessageResponse> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){
@@ -50,7 +46,4 @@ public class MessageController {
         }
         return ResponseEntity.noContent().build();
     }
-
-
-
 }
