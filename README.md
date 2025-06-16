@@ -2,151 +2,20 @@
 
 ![](src/main/resources/image/logo.png)
 
-This project is currently being developed to strengthen my skills in Spring Boot, Hibernate, RESTful API design, and dependency injection. 
-It demonstrates building a RESTful web application simulating an email system, utilizing Spring Boot, managing databases with Flyway, 
-and implementing security features with Spring Security. The application leverages PostgreSQL for production environments and H2 for testing.
+Currently, I’m reengineering the Client-Server Mailing System into a Java 21 Spring Boot 3 REST API to master the Spring ecosystem and Hibernate (JPA) 
+with Spring Data JPA, while integrating OAuth2 via Keycloak for user management. It simulates a task-management system featuring user authentication,
+role-based access control, and persistent data management.
 
+## 📖 Key focus areas
 
-## 📖 Features
-
-- **User Management**: Creating users with role-based access (USER, ADMIN)
-- **JWT Authentication**: Secure login with token generation
-- **Role-Based Access Control**: Filters enforce ADMIN-only access where needed
-- **Message Sending System**: Sending a message from the logged-in user to another users
-- **RESTful Endpoints**: For login, message sending, etc.
-- **Database Integration**: PostgreSQL for production, H2 for testing
+- **Designing and building a Spring Boot 3 REST API**
+- **Hibernate (JPA) with Spring Data JPA for ORM and transactional operations**
+- **OAuth2/JWT security using Spring Security and Keycloak (Admin Client & custom role converter)**
+- **REST controllers, DTO validation, global exception handling
+- **Docker containerization (Dockerfile + Docker Compose) for the application and Keycloak**
+- **Unit and integration testing with JUnit 5, Spring Boot Test, MockMvc, and H2 in-memory database**
 - **Automatic Database Migrations**: Managing database schema changes using Flyway
 - **Environment Configuration**: Utilization of .env file
 
-## 🚀 Technologies & Libraries Used
+This project is under active development and will be continuously updated with new features and improvements.
 
-- Java 21
-- Spring Boot 3.4.4.
-- Spring MVC (Web)
-- Spring Security
-- Spring Data JPA
-- Hibernate
-- PostgreSQL & H2 Database
-- JWT
-- Flyway
-- Spring Dotenv
-- Lombok
-- BCrypt (password encryption)
-- Docker & Docker Compose
-- Maven
-
-## 🧪 Testing Stack
-- JUnit 5
-- Spring Boot Test 
-- MockMvc 
-
-
-## 📂 Project Structure
-
-```
-.
-├── src
-│   ├── main
-│   │   ├── java/com/jakubbone
-│   │   │   ├── config         # Flyway and security configuration
-│   │   │   ├── controller     # REST API controllers
-│   │   │   ├── dto            # Data transfer objects
-│   │   │   ├── exception      # Global exception handling
-│   │   │   ├── model          # JPA entity models
-│   │   │   ├── repository     # Spring Data JPA repositories
-│   │   │   ├── service        # Business logic and service interfaces
-│   │   │   └── utils          # JWT token provider and filter
-│   │   └── resources          
-│   │       ├── db/migration   # Flyway migrations scripts (PostgreSQL and H2)
-│   │       ├── application.properties
-│   │       └── application-test.properties
-│   └── test                    # Unit and integration tests
-├── Dockerfile                  # Builds application Docker image
-├── docker-compose.yml          # Container orchestration
-├── pom.xml                     # Maven dependency management
-└── .env                        # Secrets and environment variables
-```
-
-## 🛠️ Environment Configuration
-
-The application uses an `.env` file for storing sensitive data, e.g.:
-
-```bash
-SPRING_DATASOURCE_USERNAME=spring_user
-SPRING_DATASOURCE_PASSWORD=spring123
-JWT_SECRET=secret_jwt_key
-```
-
-### 🐳 Running the Application
-
-**Production environment (PostgreSQL with Docker):**
-
-```bash
-docker-compose up -d
-mvn spring-boot:run
-```
-
-**Testing environment (H2):**
-
-```bash
-mvn test
-```
-
-### 🗃️ Database Management with Flyway
-
-Database migrations are automatically applied at application startup. Flyway configuration enabling "clean migrate":
-
-```java
-@Bean
-public FlywayMigrationStrategy cleanMigrateStrategy() {
-    return flyway -> {
-        flyway.clean();   // removes existing schema
-        flyway.migrate(); // applies migrations (V1, V2...)
-    };
-}
-```
-
-
-## 🔑 Security and Authentication
-
-The application uses JWT and Spring Security:
-
-- Passwords are encrypted using BCrypt
-- JWT tokens are generated upon successful login and secure REST endpoint access
-
-
-## ✅ Automated Testing
-
-The project includes integration and unit tests using JUnit:
-
-- Uses H2 database
-- Validates login functionality, token generation, and endpoint responses
-
-Example to run tests:
-
-```bash
-mvn clean test
-```
-
-## 📈 Application Endpoints
-
-- `/api/login` – Authenticates user and returns a JWT token
-- `/api/messages` – Sends a message from the logged-in user to another users
-- `/api/info` – Returns the current application version
-- `/api/uptime` – Returns application uptime in seconds
-
-
-## 📦 Building with Docker
-
-Build nad run the application:
-
-```bash
-docker-compose up --build
-```
-
-
-## Keycloak
-
-Keycloak starts with --features=token-exchange:v1,impersonation:v1 because only legacy token-exchange v1 accepts requested_subject,
-letting us mint a JWT for any user without their token—v2 can only down-scope an existing user token. 
-Once v2 gains full impersonation, we’ll simply remove those flags and switch to the standard flow.
