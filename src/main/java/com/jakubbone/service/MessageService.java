@@ -26,6 +26,10 @@ public class MessageService {
 
     @Transactional
     public Message sendMessage(String fromUsername, String toUsername, String content) {
+        if(toUsername.equals(fromUsername)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot send message to yourself");
+        }
+
         if (!keycloakUserService.existsByUsername(toUsername)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient " + toUsername + " not found");
         }
