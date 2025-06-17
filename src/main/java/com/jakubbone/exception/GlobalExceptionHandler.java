@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
                 Instant.now().toString(),
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "Invalid argument: " + e.getMessage()
+                "Invalid argument"
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
@@ -55,8 +55,8 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
                 e.getStatusCode().value(),
-                e.getMessage(),
-                e.getReason()
+                e.getStatusCode().toString()
+                e.getReason() != null ? e.getReason() : "Unexpected error"
         );
         return ResponseEntity.status(e.getStatusCode()).body(error);
     }
