@@ -7,6 +7,7 @@ import com.jakubbone.model.Message;
 import com.jakubbone.repository.MessageRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class MessageService {
         this.keycloakUserService = keycloakUserService;
     }
 
+    @Transactional
     public Message sendMessage(String fromUsername, String toUsername, String content) {
         if (!keycloakUserService.existsByUsername(toUsername)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient " + toUsername + " not found");
