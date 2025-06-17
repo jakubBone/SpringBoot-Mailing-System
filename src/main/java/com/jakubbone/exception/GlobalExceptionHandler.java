@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
                 e.getStatusCode().value(),
-                e.getStatusCode().toString()
+                e.getStatusCode().toString(),
                 e.getReason() != null ? e.getReason() : "Unexpected error"
         );
         return ResponseEntity.status(e.getStatusCode()).body(error);
