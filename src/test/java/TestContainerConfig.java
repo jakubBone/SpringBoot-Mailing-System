@@ -18,19 +18,4 @@ public class TestContainerConfig {
             .withEnv("KEYCLOAK_ADMIN", "admin")
             .withEnv("KEYCLOAK_ADMIN_PASSWORD", "admin");
 
-    @DynamicPropertySource
-    static void registerDynamicProperties(DynamicPropertyRegistry registry){
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-
-        registry.add("keycloak.base-url", () -> keycloak.getAuthServerUrl());
-        registry.add("keycloak.realm", () -> "mailingsystem");
-        registry.add("keycloak.admin-client-id", () -> "");
-        registry.add("keycloak.admin-client-secret", () -> "");
-        registry.add("keycloak.resource", () -> "account");
-        registry.add("keycloak.auth-server-url", () -> keycloak.getAuthServerUrl());
-        registry.add("keycloak.ssl-required", () -> "none");
-        registry.add("keycloak.public-client", () -> "true");
-    }
 }
