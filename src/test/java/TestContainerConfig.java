@@ -16,6 +16,10 @@ public class TestContainerConfig {
     public static KeycloakContainer<?> keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.2.4")
             .withRealmImportFile("mailingsystem-realm.json")
             .withEnv("KEYCLOAK_ADMIN", "admin")
-            .withEnv("KEYCLOAK_ADMIN_PASSWORD", "admin");
-
-}
+            .withEnv("KEYCLOAK_ADMIN_PASSWORD", "admin")
+            .withExposedPorts(8080)
+            .withEnv("KC_DB", "postgres")
+            .withEnv("KC_DB_URL", "jdbc:postgresql://postgres:5432/spring_db")
+            .withEnv("KC_DB_USERNAME", "spring_user")
+            .withEnv("KC_DB_PASSWORD", "spring123");
+    }
