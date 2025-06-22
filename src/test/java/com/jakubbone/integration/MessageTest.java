@@ -1,3 +1,5 @@
+package com.jakubbone.integration;
+
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
