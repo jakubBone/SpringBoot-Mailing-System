@@ -12,7 +12,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) // use random available port
 @Testcontainers
 public class MessageTest {
-
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("test_db")
@@ -20,16 +19,10 @@ public class MessageTest {
             .withPassword("test123");
 
     @Container
-    static KeycloakContainer<?> keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.2.4")
+    static KeycloakContainer keycloak = new KeycloakContainer()
             .withRealmImportFile("test-mailingsystem-realm.json")
-            .withEnv("KEYCLOAK_ADMIN", "admin")
-            .withEnv("KEYCLOAK_ADMIN_PASSWORD", "admin")
-
-            .withExposedPorts(8080)
-            .withEnv("KC_DB", "postgres")
-            .withEnv("KC_DB_URL", "jdbc:postgresql://postgres:5432/test_db")
-            .withEnv("KC_DB_USERNAME", "test_db")
-            .withEnv("KC_DB_PASSWORD", "test123");
+            .withAdminUsername("admin")
+            .withAdminPassword("admin");
 
     @DynamicPropertySource
     void registerProperties(DynamicPropertyRegistry registry){
