@@ -36,6 +36,9 @@ public class MessageTest {
         registry.add("keycloak.realm", () -> "test-mailingsystem");
         registry.add("keycloak.admin-client-id", () -> "test-mailingsystem");
         registry.add("keycloak.admin-client-secret", () -> "test-secret");
+
+        registry.add(P"spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> keycloak.getAuthServerUrl() + "/realms/test-mailingsystem");
+        registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri", () -> keycloak.getAuthServerUrl() + "/realms/test-mailingsystem/protocol/openid-connect/certs");
     }
 
     String obtainAccessToken(String username, String password){
