@@ -1,9 +1,13 @@
 package com.jakubbone.integration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jakubbone.repository.MessageRepository;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
+import org.junit.jupiter.api.BeforeEach;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -22,9 +26,10 @@ public class MessageTest {
 
     @Container
     static KeycloakContainer keycloak = new KeycloakContainer()
-            .withRealmImportFile("test-mailingsystem-realm.json")
+            .withRealmImportFile("/test-mailingsystem-realm.json")
             .withAdminUsername("admin")
             .withAdminPassword("admin");
+
 
     @DynamicPropertySource
     void registerProperties(DynamicPropertyRegistry registry){
@@ -37,8 +42,23 @@ public class MessageTest {
         registry.add("keycloak.admin-client-id", () -> "test-mailingsystem");
         registry.add("keycloak.admin-client-secret", () -> "test-secret");
 
-        registry.add(P"spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> keycloak.getAuthServerUrl() + "/realms/test-mailingsystem");
-        registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri", () -> keycloak.getAuthServerUrl() + "/realms/test-mailingsystem/protocol/openid-connect/certs");
+        registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> keycloak.getAuthServerUrl() + "/realms/test
+        registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri", () -> keycloak.getAuthServerUrl() + "/realms/t-mailingsystem\");est-mailingsystem/protocol/openid-connect/certs");
+    }
+
+    @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
+    MessageRepository messageRepository;
+
+    String adminToken
+    String userToken
+
+    BeforeEach
+    void setup(){
+        this.adminToken = obtainAccessToken("testAdmin", "admin123")
+        this.userToken = obtainAccessToken("testUser", "user123")
     }
 
     String obtainAccessToken(String username, String password){
