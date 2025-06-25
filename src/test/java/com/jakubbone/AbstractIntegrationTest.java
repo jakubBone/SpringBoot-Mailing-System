@@ -1,4 +1,4 @@
-package com.jakubbone.integration;
+package com.jakubbone;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jakubbone.repository.MessageRepository;
@@ -17,7 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT) // use random available port
 @Testcontainers
-public class MessageTest {
+public class AbstractIntegrationTest {
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("test_db")
