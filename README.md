@@ -10,7 +10,8 @@ and robust data persistence.
 
 - **Designing and building a Spring Boot 3 REST API**
 - **Hibernate (JPA) with Spring Data JPA for ORM and transactional operations**
-- **OAuth2/JWT security using Spring Security and Keycloak (Admin Client & custom role converter)**
+- **OAuth2/JWT security with Spring Security & Keycloak**
+- **Keycloak Admin REST client for user & role management**
 - **REST controllers, DTO validation, global exception handling**
 - **Docker containerization (Dockerfile + Docker Compose) for the application and Keycloak**
 - **Unit and integration testing with JUnit 5, Spring Boot Test, MockMvc, and H2 in-memory database**
