@@ -492,10 +492,10 @@
     "groups" : [ ]
   }, {
     "id" : "587244a1-e624-4511-8d8b-e4e851940295",
-    "username" : "testuser",
-    "firstName" : "Jakub",
-    "lastName" : "Bone",
-    "email" : "jakub@spring.com",
+    "username" : "us",
+    "firstName" : "Test",
+    "lastName" : "User",
+    "email" : "testuser@spring.com",
     "emailVerified" : true,
     "createdTimestamp" : 1747922383647,
     "enabled" : true,

@@ -33,13 +33,13 @@ public class MessageTest extends AbstractIntegrationTest {
     @BeforeEach
     void setup() {
         messageRepository.deleteAll();
-        adminToken = getJwtToken("testAdmin", "adminPassword");
-        userToken = getJwtToken("testUser", "userPassword");
+        adminToken = getJwtToken("testadmin", "adminPassword");
+        userToken = getJwtToken("testuser", "userPassword");
     }
 
     @Test
     void shouldReturn201_whenAdminSendsValidMessage() throws Exception {
-        SendMessageRequest req = new SendMessageRequest("admin", "Hello user!");
+        SendMessageRequest req = new SendMessageRequest("testuser", "Hello user!");
 
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
