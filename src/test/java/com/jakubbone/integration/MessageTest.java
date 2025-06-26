@@ -11,13 +11,17 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
-public class MessageTest extends AbstractIntegrationTest {
+class MessageTest extends AbstractIntegrationTest {
     @Autowired
     MockMvc mockMvc;
 
@@ -39,7 +43,7 @@ public class MessageTest extends AbstractIntegrationTest {
 
     @Test
     void shouldReturn201_whenAdminSendsValidMessage() throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testuser", "Hello user!");
+        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
 
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -48,4 +52,41 @@ public class MessageTest extends AbstractIntegrationTest {
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isCreated());
     }
+
+    @Test
+    void shouldReturn201_whenUserSendsValidMessage() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testadmin", "Hello testadmin!");
+
+        mockMvc.perform(post("/api/v1/messages")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void shouldReturn404_whenRecipientNotFound() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("unknown", "Hello user!");
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldReturn404_whenNoContent(@Autowired MockMvc mockMvc) throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testadmin", "");
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isBadRequest());
+    }
 }
+
