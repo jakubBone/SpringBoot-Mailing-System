@@ -11,13 +11,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -78,7 +74,7 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldReturn404_whenNoContent(@Autowired MockMvc mockMvc) throws Exception {
+    void shouldReturn404_whenNoContent() throws Exception {
         SendMessageRequest req = new SendMessageRequest("testadmin", "");
 
         mockMvc.perform(post("/api/v1/messages")
