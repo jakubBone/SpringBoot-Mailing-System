@@ -407,10 +407,10 @@
   "webAuthnPolicyPasswordlessExtraOrigins" : [ ],
   "users" : [ {
     "id" : "a7d68651-6850-4fee-94d0-836c11117754",
-    "username" : "testAdmin",
-    "firstName" : "Test",
-    "lastName" : "Admin",
-    "email" : "testadmin@spring.com",
+    "username" : "testadmin",
+    "firstName" : "admin",
+    "lastName" : "admin",
+    "email" : "admin@spring.com",
     "emailVerified" : true,
     "createdTimestamp" : 1747933762092,
     "enabled" : true,
@@ -430,7 +430,7 @@
     "groups" : [ ]
   }, {
     "id" : "809659f0-4cbd-4d87-a656-ebb27393675f",
-    "username" : "daniel",
+    "username" : "testdaniel",
     "firstName" : "Daniel",
     "lastName" : "Kowalski",
     "email" : "daniel@spring.com",
@@ -492,9 +492,9 @@
     "groups" : [ ]
   }, {
     "id" : "587244a1-e624-4511-8d8b-e4e851940295",
-    "username" : "testUser",
-    "firstName" : "testUser",
-    "lastName" : "testUser",
+    "username" : "testuser",
+    "firstName" : "Test",
+    "lastName" : "User",
     "email" : "testuser@spring.com",
     "emailVerified" : true,
     "createdTimestamp" : 1747922383647,
