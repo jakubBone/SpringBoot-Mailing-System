@@ -19,8 +19,8 @@ public class MessageResponse {
     public static MessageResponse fromEntity(Message msg) {
         return new MessageResponse(
                 msg.getId(),
-                msg.getSenderUsername(),
-                msg.getRecipientUsername(),
+                msg.getSenderId(),
+                msg.getRecipientId(),
                 msg.getContent(),
                 msg.getTimestamp(),
                 msg.isRead()

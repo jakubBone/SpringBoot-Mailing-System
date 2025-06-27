@@ -37,8 +37,8 @@ public class MessageService {
         String sanitizedContent = sanitizer.sanitize(content);
 
         Message msg = new Message();
-        msg.setSenderUsername(fromUsername);
-        msg.setRecipientUsername(toUsername);
+        msg.setSenderId(fromUsername);
+        msg.setRecipientId(toUsername);
         msg.setContent(sanitizedContent);
         msg.setTimestamp(LocalDateTime.now());
 

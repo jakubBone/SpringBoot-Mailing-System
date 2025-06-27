@@ -19,10 +19,10 @@ public class Message {
     private Long id;
 
     @Column(name = "sender_id", nullable = false)
-    private String senderUsername;
+    private String senderId;
 
     @Column(name = "recipient_id", nullable = false)
-    private String recipientUsername;
+    private String recipientId;
 
     @Column(nullable = false)
     private String content;
