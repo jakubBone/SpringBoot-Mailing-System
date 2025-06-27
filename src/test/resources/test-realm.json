@@ -1,6 +1,6 @@
 {
   "id" : "18bba881-e349-496b-b8c7-82f546c430e1",
-  "realm" : "mailingsystem",
+  "realm" : "test",
   "displayName" : "",
   "displayNameHtml" : "",
   "notBefore" : 0,
@@ -58,7 +58,7 @@
       "attributes" : { }
     }, {
       "id" : "a408ad2b-5b88-433e-bdd2-6684f549771f",
-      "name" : "default-roles-mailingsystem",
+      "name" : "default-roles-test",
       "description" : "${role_default-roles}",
       "composite" : true,
       "composites" : {
@@ -363,7 +363,7 @@
   "groups" : [ ],
   "defaultRole" : {
     "id" : "a408ad2b-5b88-433e-bdd2-6684f549771f",
-    "name" : "default-roles-mailingsystem",
+    "name" : "default-roles-test",
     "description" : "${role_default-roles}",
     "composite" : true,
     "clientRole" : false,
@@ -425,7 +425,7 @@
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "USER", "default-roles-mailingsystem", "ADMIN" ],
+    "realmRoles" : [ "USER", "default-roles-test", "ADMIN" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -447,7 +447,7 @@
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-mailingsystem" ],
+    "realmRoles" : [ "default-roles-test" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -469,7 +469,7 @@
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-mailingsystem" ],
+    "realmRoles" : [ "default-roles-test" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -483,7 +483,7 @@
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-mailingsystem" ],
+    "realmRoles" : [ "default-roles-test" ],
     "clientRoles" : {
       "realm-management" : [ "query-users", "manage-realm", "manage-users", "view-users", "impersonation", "realm-admin" ],
       "account" : [ "manage-account" ]
@@ -529,12 +529,12 @@
     "clientId" : "account",
     "name" : "${client_account}",
     "rootUrl" : "${authBaseUrl}",
-    "baseUrl" : "/realms/mailingsystem/account/",
+    "baseUrl" : "/realms/test/account/",
     "surrogateAuthRequired" : false,
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "/realms/mailingsystem/account/*" ],
+    "redirectUris" : [ "/realms/test/account/*" ],
     "webOrigins" : [ ],
     "notBefore" : 0,
     "bearerOnly" : false,
@@ -560,12 +560,12 @@
     "clientId" : "account-console",
     "name" : "${client_account-console}",
     "rootUrl" : "${authBaseUrl}",
-    "baseUrl" : "/realms/mailingsystem/account/",
+    "baseUrl" : "/realms/test/account/",
     "surrogateAuthRequired" : false,
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "/realms/mailingsystem/account/*" ],
+    "redirectUris" : [ "/realms/test/account/*" ],
     "webOrigins" : [ ],
     "notBefore" : 0,
     "bearerOnly" : false,
@@ -1084,12 +1084,12 @@
     "clientId" : "security-admin-console",
     "name" : "${client_security-admin-console}",
     "rootUrl" : "${authAdminUrl}",
-    "baseUrl" : "/admin/mailingsystem/console/",
+    "baseUrl" : "/admin/test/console/",
     "surrogateAuthRequired" : false,
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "/admin/mailingsystem/console/*" ],
+    "redirectUris" : [ "/admin/test/console/*" ],
     "webOrigins" : [ "+" ],
     "notBefore" : 0,
     "bearerOnly" : false,
@@ -1140,7 +1140,7 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "secret" : "0HMuCpZQvov7QUl7jVASrBC9AW8nkJFZ",
+    "secret" : "1234",
     "redirectUris" : [ "http://localhost:8080/*" ],
     "webOrigins" : [ "http://localhost:8080" ],
     "notBefore" : 0,
