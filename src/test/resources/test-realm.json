@@ -272,7 +272,7 @@
       "admin-permissions" : [ ],
       "security-admin-console" : [ ],
       "admin-cli" : [ ],
-      "springboot-mailing-system" : [ ],
+      "test-client-id" : [ ],
       "account-console" : [ ],
       "broker" : [ {
         "id" : "ecf37d5b-556d-4852-bc2d-b5521ceb2580",
@@ -474,12 +474,12 @@
     "groups" : [ ]
   }, {
     "id" : "4cdcec01-9124-4b53-a0d6-1bddb1e06ab0",
-    "username" : "service-account-springboot-mailing-system",
+    "username" : "service-account-test-client-id",
     "emailVerified" : false,
     "createdTimestamp" : 1747938039243,
     "enabled" : true,
     "totp" : false,
-    "serviceAccountClientId" : "springboot-mailing-system",
+    "serviceAccountClientId" : "test-client-id",
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
@@ -1130,7 +1130,7 @@
     "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
   }, {
     "id" : "5f35267d-27ee-4350-8e5c-8e384afed437",
-    "clientId" : "springboot-mailing-system",
+    "clientId" : "test-client-id",
     "name" : "",
     "description" : "",
     "rootUrl" : "http://localhost:8080",

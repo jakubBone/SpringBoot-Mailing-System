@@ -65,7 +65,7 @@ public abstract class AbstractIntegrationTest {
 
         registry.add("keycloak.base-url", () -> authServerUrl);
         registry.add("keycloak.realm", () -> "test");
-        registry.add("keycloak.admin-client-id", () -> "springboot-mailing-system");
+        registry.add("keycloak.admin-client-id", () -> "test-client-id");
         registry.add("keycloak.admin-client-secret", () -> "1234");
 
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> issuerUri);
@@ -99,7 +99,7 @@ public abstract class AbstractIntegrationTest {
         Keycloak keycloakClient = KeycloakBuilder.builder()
                 .serverUrl(keycloak.getAuthServerUrl())
                 .realm("test")
-                .clientId("springboot-mailing-system")
+                .clientId("test-client-id")
                 .clientSecret("1234")
                 .username(username)
                 .password(password)
