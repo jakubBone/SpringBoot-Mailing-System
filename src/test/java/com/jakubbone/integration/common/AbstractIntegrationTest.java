@@ -22,7 +22,6 @@ import java.time.Duration;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
-
     private static final Network network = Network.newNetwork();
 
     @Container
