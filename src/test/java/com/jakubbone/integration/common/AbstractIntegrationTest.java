@@ -37,7 +37,7 @@ public abstract class AbstractIntegrationTest {
     private static final KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.2.4")
             .withNetwork(network)
             .withNetworkAliases("keycloak")
-            .withRealmImportFile("mailingsystem-realm.json") // From classpath
+            .withRealmImportFile("test-realm.json") // From classpath
             .withEnv("KC_FEATURES", "token-exchange")
             .withEnv("KC_FEATURES", "impersonation")
             .withEnv("KC_DB", "postgres")
@@ -49,7 +49,7 @@ public abstract class AbstractIntegrationTest {
             .withAdminUsername("admin")
             .withAdminPassword("admin")
             .dependsOn(postgres)
-            .waitingFor(Wait.forHttp("/realms/mailingsystem")
+            .waitingFor(Wait.forHttp("/realms/test")
                     .forStatusCode(200)
                     .withStartupTimeout(Duration.ofMinutes(2))); // act as healthcheck
 
@@ -61,12 +61,12 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.flyway.enabled", () -> "false");
 
         String authServerUrl = keycloak.getAuthServerUrl();
-        String issuerUri = authServerUrl + "/realms/mailingsystem";
+        String issuerUri = authServerUrl + "/realms/test";
 
         registry.add("keycloak.base-url", () -> authServerUrl);
-        registry.add("keycloak.realm", () -> "mailingsystem");
+        registry.add("keycloak.realm", () -> "test");
         registry.add("keycloak.admin-client-id", () -> "springboot-mailing-system");
-        registry.add("keycloak.admin-client-secret", () -> "0HMuCpZQvov7QUl7jVASrBC9AW8nkJFZ");
+        registry.add("keycloak.admin-client-secret", () -> "1234");
 
         registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> issuerUri);
         registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri", () -> issuerUri + "/protocol/openid-connect/certs");
@@ -92,15 +92,15 @@ public abstract class AbstractIntegrationTest {
         passwordCred.setTemporary(false);
         passwordCred.setType(CredentialRepresentation.PASSWORD);
         passwordCred.setValue(password);
-        adminClient.realm("mailingsystem").users().get(userId).resetPassword(passwordCred);
+        adminClient.realm("test").users().get(userId).resetPassword(passwordCred);
     }
 
     protected String getJwtToken(String username, String password) {
         Keycloak keycloakClient = KeycloakBuilder.builder()
                 .serverUrl(keycloak.getAuthServerUrl())
-                .realm("mailingsystem")
+                .realm("test")
                 .clientId("springboot-mailing-system")
-                .clientSecret("0HMuCpZQvov7QUl7jVASrBC9AW8nkJFZ")
+                .clientSecret("1234")
                 .username(username)
                 .password(password)
                 .grantType(OAuth2Constants.PASSWORD)
