@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
     // HTTP Status: Defined by exception (dynamic)
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException e){
-        log.warn("Invalid argument provided: {}", e.getMessage());
+        log.warn("Unexpected error occurred: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
                 e.getStatusCode().value(),
