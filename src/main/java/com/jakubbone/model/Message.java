@@ -19,9 +19,11 @@ public class Message {
     private Long id;
 
     @Column(name = "sender_id", nullable = false)
+    @ManyToOne
     private String senderId;
 
     @Column(name = "recipient_id", nullable = false)
+    @ManyToOne
     private String recipientId;
 
     @Column(nullable = false)
