@@ -34,6 +34,12 @@ public class MessageService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient " + toUsername + " not found");
         }
 
+        long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(toUsername);
+
+        if(messageCount > 5){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot send message: Recipient's mailbox is full");
+        }
+
         String sanitizedContent = sanitizer.sanitize(content);
 
         Message msg = new Message();
