@@ -10,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,7 +25,6 @@ public class MessageController {
     }
 
     @PostMapping
-    @Transactional
     public ResponseEntity<MessageResponse> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
         String sender = jwt.getToken().getClaim("preferred_username");
@@ -37,7 +35,6 @@ public class MessageController {
     }
 
     @PatchMapping("/{id}/read")
-    @Transactional
     public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id) {
         Message msg = messageRepository.findById(id).
                 orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));

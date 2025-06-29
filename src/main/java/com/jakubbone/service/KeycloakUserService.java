@@ -10,13 +10,13 @@ import java.util.List;
 
 @Service
 @Getter
-public class KeycloakService {
+public class KeycloakUserService {
     @Value("${keycloak.realm}")
     private String keycloakRealm;
 
     private final Keycloak keycloakAdminClient;
 
-    public KeycloakService(Keycloak keycloakAdminClient) {
+    public KeycloakUserService(Keycloak keycloakAdminClient) {
         this.keycloakAdminClient = keycloakAdminClient;
     }
 
