@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
 @Service
 public class MessageService {
     private final MessageRepository messageRepository;
-    private final KeycloakService keycloakUserService;
+    private final KeycloakUserService keycloakUserService;
 
     private final PolicyFactory sanitizer = Sanitizers.FORMATTING.and(Sanitizers.LINKS);
 
-    public MessageService(MessageRepository messageRepository, KeycloakService keycloakUserService) {
+    public MessageService(MessageRepository messageRepository, KeycloakUserService keycloakUserService) {
         this.messageRepository = messageRepository;
         this.keycloakUserService = keycloakUserService;
     }
@@ -36,7 +36,7 @@ public class MessageService {
 
         long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(toUsername);
 
-        if(messageCount => 5){
+        if(messageCount >= 5){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot send message: Recipient's mailbox is full");
         }
 
