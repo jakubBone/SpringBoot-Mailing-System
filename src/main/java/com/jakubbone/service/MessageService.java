@@ -6,8 +6,10 @@ import org.owasp.html.Sanitizers;
 import com.jakubbone.model.Message;
 import com.jakubbone.repository.MessageRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -49,5 +51,16 @@ public class MessageService {
         msg.setTimestamp(LocalDateTime.now());
 
         return messageRepository.save(msg);
+    }
+
+    @Transactional
+    public void markMessageAsRead(Long messageId) {
+        Message msg = messageRepository.findById(messageId).
+                orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+
+        if(!msg.isRead()){
+            msg.setRead(true);
+            messageRepository.save(msg);
+        }
     }
 }

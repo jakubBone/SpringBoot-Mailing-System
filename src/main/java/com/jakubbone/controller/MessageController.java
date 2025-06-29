@@ -35,13 +35,8 @@ public class MessageController {
     }
 
     @PatchMapping("/{id}/read")
-    public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id) {
-        Message msg = messageRepository.findById(id).
-                orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
-
-        if(!msg.isRead()){
-            msg.setRead(true);
-        }
+    public ResponseEntity<Void> markMessageAsRead(@PathVariable Long messageId) {
+        messageService.markMessageAsRead(messageId);
         return ResponseEntity.noContent().build();
     }
 }
