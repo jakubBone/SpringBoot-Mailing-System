@@ -6,10 +6,8 @@ import org.owasp.html.Sanitizers;
 import com.jakubbone.model.Message;
 import com.jakubbone.repository.MessageRepository;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -18,6 +16,7 @@ import java.time.LocalDateTime;
 public class MessageService {
     private final MessageRepository messageRepository;
     private final KeycloakUserService keycloakUserService;
+    private final int MAILBOX_LIMIT = 5;
 
     private final PolicyFactory sanitizer = Sanitizers.FORMATTING.and(Sanitizers.LINKS);
 
@@ -38,7 +37,7 @@ public class MessageService {
 
         long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(toUsername);
 
-        if(messageCount >= 5){
+        if(messageCount >= MAILBOX_LIMIT){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot send message: Recipient's mailbox is full");
         }
 

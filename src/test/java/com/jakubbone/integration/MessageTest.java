@@ -29,6 +29,7 @@ class MessageTest extends AbstractIntegrationTest {
 
     String adminToken;
     String userToken;
+    int MAILBOX_LIMIT = 5;
 
     @BeforeEach
     void setup() {
@@ -83,6 +84,27 @@ class MessageTest extends AbstractIntegrationTest {
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn409_whenMailboxFull() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+
+        for(int i = 0; i < MAILBOX_LIMIT; i++){
+            mockMvc.perform(post("/api/v1/messages")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsBytes(req)))
+                    .andDo(MockMvcResultHandlers.print())
+                    .andExpect(status().isCreated());
+        }
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isConflict());
     }
 }
 
