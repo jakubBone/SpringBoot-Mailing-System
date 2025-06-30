@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jakubbone.integration.common.AbstractIntegrationTest;
 import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.repository.MessageRepository;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,6 +31,7 @@ class MessageTest extends AbstractIntegrationTest {
 
     String adminToken;
     String userToken;
+    int MAILBOX_LIMIT = 5;
 
     @BeforeEach
     void setup() {
@@ -83,6 +86,51 @@ class MessageTest extends AbstractIntegrationTest {
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn409_whenMailboxFull() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+
+        for(int i = 0; i < MAILBOX_LIMIT; i++){
+            mockMvc.perform(post("/api/v1/messages")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsBytes(req)))
+                    .andDo(MockMvcResultHandlers.print())
+                    .andExpect(status().isCreated());
+        }
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void shouldReturnTrue_whenMessagesMarkedAsRead() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+
+        for(int i = 0; i < 3; i++){
+            mockMvc.perform(post("/api/v1/messages")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsBytes(req)))
+                    .andDo(MockMvcResultHandlers.print())
+                    .andExpect(status().isCreated());
+        }
+
+        for(int i = 1; i <= 3; i++){
+            mockMvc.perform(patch("/api/v1/messages/" + i + "/read")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+                    .andDo(MockMvcResultHandlers.print())
+                    .andExpect(status().isNoContent());
+        }
+
+        long unread = messageRepository.countByRecipientIdAndIsReadFalse("testuser");
+        Assert.assertEquals(0, unread);
     }
 }
 
