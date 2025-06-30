@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/messages")
@@ -35,8 +34,8 @@ public class MessageController {
     }
 
     @PatchMapping("/{id}/read")
-    public ResponseEntity<Void> markMessageAsRead(@PathVariable Long messageId) {
-        messageService.markMessageAsRead(messageId);
+    public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id) {
+        messageService.markMessageAsRead(id);
         return ResponseEntity.noContent().build();
     }
 }
