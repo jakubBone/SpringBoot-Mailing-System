@@ -24,8 +24,8 @@ public class FlywayConfig {
     @Bean
     public FlywayMigrationStrategy cleanMigrateStrategy() {
         return flyway -> {
-            flyway.clean();    // delete entire schema and history
-            flyway.migrate();  // start V1, V2…
+            flyway.clean();    // Clean database schema before migration
+            flyway.migrate();  // // Apply all migrations from baseline: V1, V2 etc.
         };
     }
 }

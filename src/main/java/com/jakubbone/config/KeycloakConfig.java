@@ -7,6 +7,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuration of the Keycloak client for connecting to the Keycloak server
+ * to manage users and authorization.
+ */
 @Configuration
 public class KeycloakConfig {
     @Value("${keycloak.base-url}")
@@ -21,6 +25,12 @@ public class KeycloakConfig {
     @Value("${keycloak.admin-client-secret}")
     private String adminClientSecret;
 
+    /**
+     * Creates and configures the Keycloak admin client bean,
+     * which is used to communicate with the Keycloak server.
+     *
+     * @return configured Keycloak client
+     */
     @Bean
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
