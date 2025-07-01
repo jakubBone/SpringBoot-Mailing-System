@@ -3,7 +3,6 @@ package com.jakubbone.controller;
 import com.jakubbone.dto.MessageResponse;
 import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.model.Message;
-import com.jakubbone.repository.MessageRepository;
 import com.jakubbone.service.MessageService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
@@ -16,11 +15,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/messages")
 public class MessageController {
     private final MessageService messageService;
-    private final MessageRepository messageRepository;
 
-    public MessageController(MessageService messageService, MessageRepository messageRepository) {
+    public MessageController(MessageService messageService) {
         this.messageService = messageService;
-        this.messageRepository = messageRepository;
     }
 
     @PostMapping
