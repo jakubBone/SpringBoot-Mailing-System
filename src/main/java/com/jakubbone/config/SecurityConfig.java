@@ -22,8 +22,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // Stateless REST API using JWT tokens only (no cookies/session)
-        // CSRF protection is not needed here
-        // Disable it to avoid 403 code on POST/PUT/DELETE
+        // CSRF protection disabled to avoid 403 errors on state-changing requests
         http.csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
@@ -38,6 +37,9 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Converts JWT token extracting roles from Keycloak into Spring Security authorities.
+     */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();

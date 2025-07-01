@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor // @NoArgsConstructor - Jackson requires no args constructor to create JSON request
+@NoArgsConstructor 
 public class SendMessageRequest {
     @NotBlank(message = "Recipient username cannot be blank")
     private String to;
