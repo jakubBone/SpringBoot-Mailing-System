@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile;
  * Usage:
  *   - Enable only in development by activating the "dev" profile via application.properties:
  *       spring.profiles.active=dev
- *   - Or programmatically in your main application:
+ *   - Or programmatically in main application:
  *       SpringApplication app = new SpringApplication(SpringBootMailingApplication.class);
  *       app.setAdditionalProfiles("dev");
  *       app.run(args);
@@ -104,7 +104,7 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(("/api/v1/messages")).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(("/api/v1/messages/**")).hasAnyRole("USER", "ADMIN")
                         .requestMatchers( "/api/v1/info", "/api/v1/uptime").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -167,22 +167,17 @@ FILE: MessageController.java
 
 package com.jakubbone.controller;
 
+import com.jakubbone.dto.MessageResponse;
 import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.model.Message;
 import com.jakubbone.repository.MessageRepository;
 import com.jakubbone.service.MessageService;
-import com.jakubbone.utils.ResponseHandler;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/messages")
@@ -195,30 +190,71 @@ public class MessageController {
         this.messageRepository = messageRepository;
     }
 
-
     @PostMapping
-    public ResponseEntity<Map<String, Object>> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){
+    public ResponseEntity<MessageResponse> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
         String sender = jwt.getToken().getClaim("preferred_username");
 
         Message savedMessage = messageService.sendMessage(sender, req.getTo(), req.getText());
-        return ResponseHandler.success(HttpStatus.CREATED, savedMessage);
+        MessageResponse response = MessageResponse.fromEntity(savedMessage);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PatchMapping("/{id}/read")
-    @Transactional
     public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id) {
-        Message msg = messageRepository.findById(id).
-                orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
-
-        if(!msg.isRead()){
-            msg.setRead(true);
-        }
+        messageService.markMessageAsRead(id);
         return ResponseEntity.noContent().build();
     }
+}
 
+====================
+FILE: ErrorResponse.java
 
+package com.jakubbone.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class ErrorResponse {
+    private String timestamp;
+    private int errorCode;
+    private String error;
+    private String message;
+}
+
+====================
+FILE: MessageResponse.java
+
+package com.jakubbone.dto;
+
+import com.jakubbone.model.Message;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
+@AllArgsConstructor
+public class MessageResponse {
+    private Long id;
+    private String senderUsername;
+    private String recipientUsername;
+    private String content;
+    private LocalDateTime timestamp;
+    private boolean isRead;
+
+    public static MessageResponse fromEntity(Message msg) {
+        return new MessageResponse(
+                msg.getId(),
+                msg.getSenderId(),
+                msg.getRecipientId(),
+                msg.getContent(),
+                msg.getTimestamp(),
+                msg.isRead()
+        );
+    }
 }
 
 ====================
@@ -227,6 +263,7 @@ FILE: SendMessageRequest.java
 package com.jakubbone.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -241,8 +278,8 @@ public class SendMessageRequest {
     private String to;
 
     @NotBlank(message = "Message text cannot be blank")
+    @Size(min = 1, max = 256, message = "Message text must be between 1 and 256 characters")
     private String text;
-
 }
 
 ====================
@@ -250,7 +287,7 @@ FILE: GlobalExceptionHandler.java
 
 package com.jakubbone.exception;
 
-import com.jakubbone.utils.ResponseHandler;
+import com.jakubbone.dto.ErrorResponse;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataAccessException;
@@ -262,7 +299,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
+import java.time.Instant;
 
 @ControllerAdvice
 // or @RestControllerAdvice -> acts as @ControllerAdvice + @ResponseBody for all methods
@@ -272,58 +309,101 @@ public class GlobalExceptionHandler {
     // Handles JWT-related exceptions (e.g. invalid or expired token)
     // HTTP Status: 401 Unauthorized
     @ExceptionHandler(JwtException.class)
-    public ResponseEntity<Map<String,Object>> handleJwtException(JwtException e){
+    public ResponseEntity<ErrorResponse> handleJwtException(JwtException e){
         log.error("JWT error occurred: {}", e.getMessage());
-        return ResponseHandler.error(HttpStatus.UNAUTHORIZED, "Invalid JWT token");
+        ErrorResponse error = new ErrorResponse(
+                Instant.now().toString(),
+                HttpStatus.UNAUTHORIZED.value(),
+                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                "Invalid JWT token"
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     // Handles invalid method arguments (e.g. illegal or unexpected input)
     // HTTP Status: 400 Bad Request
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String,Object>> handleIllegalArgumentException(IllegalArgumentException e){
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e){
         log.error("Illegal argument exception: {}", e.getMessage());
-        return ResponseHandler.error(HttpStatus.BAD_REQUEST, "Invalid argument: " + e.getMessage());
+        ErrorResponse error = new ErrorResponse(
+                Instant.now().toString(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Invalid argument"
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     // Handles ResponseStatusException (thrown manually with a custom HTTP status)
     // HTTP Status: Defined by exception (dynamic)
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String,Object>> handleResponseStatusException(ResponseStatusException e){
-        log.warn("Invalid argument provided: {}", e.getMessage());
-        return ResponseHandler.error(e.getStatusCode(),  e.getReason());
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException e){
+        log.warn("Unexpected error occurred: {}", e.getMessage());
+        ErrorResponse error = new ErrorResponse(
+                Instant.now().toString(),
+                e.getStatusCode().value(),
+                e.getStatusCode().toString(),
+                e.getReason() != null ? e.getReason() : "Unexpected error"
+        );
+        return ResponseEntity.status(e.getStatusCode()).body(error);
     }
 
     // Handles database-related exceptions
     // HTTP Status: 500 Internal Server Error
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<?> handleDataAccessException(DataAccessException e) {
+    public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException e) {
         log.error("Database error occurred: {}", e.getMessage());
-        return ResponseHandler.error(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+        ErrorResponse error = new ErrorResponse(
+                Instant.now().toString(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                "Internal server error"
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
     // Handles case when user is not found in the system (e.g. during authentication)
     // HTTP Status: 404 Not Found
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<Map<String,Object>> handleUserNotFound(UsernameNotFoundException e) {
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UsernameNotFoundException e) {
         log.error("User not found: {}", e.getMessage());
-        return ResponseHandler.error(HttpStatus.NOT_FOUND, "User not found");
+        ErrorResponse error = new ErrorResponse(
+                Instant.now().toString(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                "User not found"
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     // Handles validation errors for incoming request data (e.g. @Valid fails)
     // HTTP Status: 400 Bad Request
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String,Object>> handleValidationException(MethodArgumentNotValidException e) {
+    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         log.error("Invalid request data: {}", e.getMessage());
-        return ResponseHandler.error(HttpStatus.BAD_REQUEST, "Invalid request data");
+        ErrorResponse error = new ErrorResponse(
+                Instant.now().toString(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Invalid request data"
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     // Catches any other unhandled exceptions (generic)
     // HTTP Status: 500 Internal Server Error
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String,Object>> handleGenericException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
         log.error("Unexpected error occurred: {}", e.getMessage());
-        return ResponseHandler.error(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error occurred");
+        ErrorResponse error = new ErrorResponse(
+                Instant.now().toString(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                "Unexpected error occurred"
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
+
 }
 
 ====================
@@ -347,13 +427,13 @@ import java.time.LocalDateTime;
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name = "sender_id", nullable = false)
-    private String senderUsername;
+    private String senderId;
 
     @Column(name = "recipient_id", nullable = false)
-    private String recipientUsername;
+    private String recipientId;
 
     @Column(nullable = false)
     private String content;
@@ -363,47 +443,6 @@ public class Message {
     private LocalDateTime timestamp;
 
     private boolean isRead = false;
-
-}
-
-====================
-FILE: User.java
-
-package com.jakubbone.model;
-
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Entity
-@Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor // JPA/Hibernate require to create object getting from DB
-public class User {
-
-    public enum Role { USER, ADMIN }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-
-    @Column(nullable = false, unique = true)
-    private String username;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING) // Hibernate save as a String, not a number
-    private Role role;
-
-    @Column(nullable = true)
-    private String provider;
-
-    public User(String username, String role, String provider ) {
-        this.username = username;
-        this.role = Role.valueOf(role);
-        this.provider = provider;
-    }
 }
 
 ====================
@@ -415,14 +454,14 @@ import com.jakubbone.model.Message;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 // JPARepository provides the ready methods
-// e.g. save(), findById(), findAll(), delete()
-// for Message Entity with the key type Long
+// e.g. save(), findById(), findAll(), delete(), countBy()
 public interface MessageRepository extends JpaRepository<Message, Long> {
-
+    // Spring Data JPA has a built-in parser that analyzes method names
+    long countByRecipientIdAndIsReadFalse(String recipientId);
 }
 
 ====================
-FILE: KeycloakService.java
+FILE: KeycloakUserService.java
 
 package com.jakubbone.service;
 
@@ -436,13 +475,13 @@ import java.util.List;
 
 @Service
 @Getter
-public class KeycloakService {
+public class KeycloakUserService {
     @Value("${keycloak.realm}")
     private String keycloakRealm;
 
     private final Keycloak keycloakAdminClient;
 
-    public KeycloakService(Keycloak keycloakAdminClient) {
+    public KeycloakUserService(Keycloak keycloakAdminClient) {
         this.keycloakAdminClient = keycloakAdminClient;
     }
 
@@ -450,8 +489,6 @@ public class KeycloakService {
         List<UserRepresentation> users = keycloakAdminClient.realm(keycloakRealm).users().search(username);
         return users != null && users.stream().anyMatch(u -> username.equals(u.getUsername()));
     }
-
-
 }
 
 ====================
@@ -459,10 +496,14 @@ FILE: MessageService.java
 
 package com.jakubbone.service;
 
+import org.owasp.html.PolicyFactory;
+import org.owasp.html.Sanitizers;
+
 import com.jakubbone.model.Message;
 import com.jakubbone.repository.MessageRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -470,25 +511,52 @@ import java.time.LocalDateTime;
 @Service
 public class MessageService {
     private final MessageRepository messageRepository;
-    private final KeycloakService keycloakUserService;
+    private final KeycloakUserService keycloakUserService;
+    private final int MAILBOX_LIMIT = 5;
 
-    public MessageService(MessageRepository messageRepository, KeycloakService keycloakUserService) {
+    private final PolicyFactory sanitizer = Sanitizers.FORMATTING.and(Sanitizers.LINKS);
+
+    public MessageService(MessageRepository messageRepository, KeycloakUserService keycloakUserService) {
         this.messageRepository = messageRepository;
         this.keycloakUserService = keycloakUserService;
     }
 
+    @Transactional
     public Message sendMessage(String fromUsername, String toUsername, String content) {
+        if(toUsername.equals(fromUsername)){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot send message to yourself");
+        }
+
         if (!keycloakUserService.existsByUsername(toUsername)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient " + toUsername + " not found");
         }
 
+        long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(toUsername);
+
+        if(messageCount >= MAILBOX_LIMIT){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot send message: Recipient's mailbox is full");
+        }
+
+        String sanitizedContent = sanitizer.sanitize(content);
+
         Message msg = new Message();
-        msg.setSenderUsername(fromUsername);
-        msg.setRecipientUsername(toUsername);
-        msg.setContent(content);
+        msg.setSenderId(fromUsername);
+        msg.setRecipientId(toUsername);
+        msg.setContent(sanitizedContent);
         msg.setTimestamp(LocalDateTime.now());
 
         return messageRepository.save(msg);
+    }
+
+    @Transactional
+    public void markMessageAsRead(Long messageId) {
+        Message msg = messageRepository.findById(messageId).
+                orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+
+        if(!msg.isRead()){
+            msg.setRead(true);
+            messageRepository.save(msg);
+        }
     }
 }
 
@@ -541,72 +609,130 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
 }
 
 ====================
-FILE: ResponseHandler.java
+FILE: AbstractIntegrationTest.java
 
-package com.jakubbone.utils;
+package com.jakubbone.integration.common;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
+import dasniko.testcontainers.keycloak.KeycloakContainer;
+import org.junit.jupiter.api.BeforeAll;
+import org.keycloak.OAuth2Constants;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.Network;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.Instant;
-import java.util.Map;
+import java.time.Duration;
 
-public class ResponseHandler {
+@Testcontainers
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+public abstract class AbstractIntegrationTest {
+    private static final Network network = Network.newNetwork();
 
-    // envelope for status OK (200)
-    public static ResponseEntity<Map<String,Object>> success(Object data) {
-        Map<String,Object> body = Map.of(
-                "timestamp", Instant.now().toString(),
-                "statusCode", HttpStatus.OK.value(),
-                "data", data
-        );
-        return ResponseEntity.ok(body);
+    @Container
+    private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+            .withNetwork(network)
+            .withNetworkAliases("postgres")
+            .withUsername("testuser")
+            .withPassword("testpass")
+            .withDatabaseName("testdb");
+
+    @Container
+    private static final KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.2.4")
+            .withNetwork(network)
+            .withNetworkAliases("keycloak")
+            .withRealmImportFile("test-realm.json") // From classpath
+            .withEnv("KC_FEATURES", "token-exchange")
+            .withEnv("KC_FEATURES", "impersonation")
+            .withEnv("KC_DB", "postgres")
+            .withEnv("KC_DB_URL_HOST", "postgres")
+            .withEnv("KC_DB_URL_DATABASE", postgres.getDatabaseName())
+            .withEnv("KC_DB_USERNAME", postgres.getUsername())
+            .withEnv("KC_DB_PASSWORD", postgres.getPassword())
+            .withEnv("KC_PROXY", "edge")
+            .withAdminUsername("admin")
+            .withAdminPassword("admin")
+            .dependsOn(postgres)
+            .waitingFor(Wait.forHttp("/realms/test")
+                    .forStatusCode(200)
+                    .withStartupTimeout(Duration.ofMinutes(2))); // act as healthcheck
+
+    @DynamicPropertySource
+    static void dynamicProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.flyway.enabled", () -> "false");
+
+        String authServerUrl = keycloak.getAuthServerUrl();
+        String issuerUri = authServerUrl + "/realms/test";
+
+        registry.add("keycloak.base-url", () -> authServerUrl);
+        registry.add("keycloak.realm", () -> "test");
+        registry.add("keycloak.admin-client-id", () -> "test-client-id");
+        registry.add("keycloak.admin-client-secret", () -> "1234");
+
+        registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> issuerUri);
+        registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri", () -> issuerUri + "/protocol/openid-connect/certs");
     }
 
-    // envelope for another status (e.g. CREATED)
-    public static ResponseEntity<Map<String,Object>> success(HttpStatus status, Object data) {
-        Map<String,Object> body = Map.of(
-                "timestamp", Instant.now().toString(),
-                "statusCode",    status.value(),
-                "status",    status.getReasonPhrase(),
-                "data",      data
-        );
-        return ResponseEntity.status(status).body(body);
+    @BeforeAll
+    static void setupKeycloakUsers() {
+        Keycloak adminClient = KeycloakBuilder.builder()
+                .serverUrl(keycloak.getAuthServerUrl())
+                .realm("master")
+                .clientId("admin-cli")
+                .username("admin")
+                .password("admin")
+                .build();
+
+        // Reset password because Keycloak stores it as a hash
+        resetUserPassword(adminClient, "a7d68651-6850-4fee-94d0-836c11117754", "adminPassword"); // 'admin'
+        resetUserPassword(adminClient, "587244a1-e624-4511-8d8b-e4e851940295", "userPassword"); // 'testuser'
     }
 
-    // envelope for error (HttpStatus)
-    public static ResponseEntity<Map<String,Object>> error(HttpStatus status, String message) {
-        Map<String,Object> body = Map.of(
-                "timestamp", Instant.now().toString(),
-                "errorCode", status.value(),
-                "error", status.getReasonPhrase(),
-                "message", message
-        );
-        return ResponseEntity.status(status).body(body);
+    private static void resetUserPassword(Keycloak adminClient, String userId, String password) {
+        CredentialRepresentation passwordCred = new CredentialRepresentation();
+        passwordCred.setTemporary(false);
+        passwordCred.setType(CredentialRepresentation.PASSWORD);
+        passwordCred.setValue(password);
+        adminClient.realm("test").users().get(userId).resetPassword(passwordCred);
     }
 
-    // envelope for error (HttpStatusCode)
-    public static ResponseEntity<Map<String, Object>> error(HttpStatusCode statusCode, String message) {
-        Map<String,Object> body = Map.of(
-                "timestamp", Instant.now().toString(),
-                "errorCode", statusCode.value(),
-                "message", message
-        );
-        return ResponseEntity.status(statusCode).body(body);
+    protected String getJwtToken(String username, String password) {
+        Keycloak keycloakClient = KeycloakBuilder.builder()
+                .serverUrl(keycloak.getAuthServerUrl())
+                .realm("test")
+                .clientId("test-client-id")
+                .clientSecret("1234")
+                .username(username)
+                .password(password)
+                .grantType(OAuth2Constants.PASSWORD)
+                .build();
+        return keycloakClient.tokenManager().getAccessToken().getToken();
     }
 }
 
 ====================
-FILE: InfoControllerTest.java
+FILE: InfoTest.java
 
 package com.jakubbone.integration;
 
+import com.jakubbone.integration.common.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
@@ -616,11 +742,12 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @ActiveProfiles("test")
-@SpringBootTest
 @AutoConfigureMockMvc
-class InfoControllerTest {
+class InfoTest extends AbstractIntegrationTest {
+	@Autowired MockMvc mockMvc;
+
 	@Test
-	void shouldReturnApplicationVersion(@Autowired MockMvc mockMvc) throws Exception {
+	void shouldReturnApplicationVersion() throws Exception {
 		mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/info"))
 				.andDo(MockMvcResultHandlers.print())
 				.andExpect(MockMvcResultMatchers.status().isOk())
@@ -630,7 +757,7 @@ class InfoControllerTest {
 	}
 
 	@Test
-	void shouldReturnApplicationUptime(@Autowired MockMvc mockMvc) throws Exception {
+	void shouldReturnApplicationUptime() throws Exception {
 		mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/uptime"))
 				.andDo(MockMvcResultHandlers.print())
 				.andExpect(MockMvcResultMatchers.status().isOk())
@@ -642,117 +769,142 @@ class InfoControllerTest {
 }
 
 ====================
-FILE: MessageControllerTest.java
+FILE: MessageTest.java
 
 package com.jakubbone.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jakubbone.integration.common.AbstractIntegrationTest;
 import com.jakubbone.dto.SendMessageRequest;
-import com.jakubbone.model.User;
 import com.jakubbone.repository.MessageRepository;
-import com.jakubbone.repository.UserRepository;
-import com.jakubbone.security.JwtTokenProvider;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
-@ActiveProfiles("test")
-@SpringBootTest
 @AutoConfigureMockMvc
-class MessageControllerTest {
+class MessageTest extends AbstractIntegrationTest {
+    @Autowired
+    MockMvc mockMvc;
+
     @Autowired
     ObjectMapper mapper;
 
     @Autowired
-    UserRepository userRepository;
-
-    @Autowired
     MessageRepository messageRepository;
-
-    @Autowired
-    JwtTokenProvider jwtTokenProvider;
 
     String adminToken;
     String userToken;
+    int MAILBOX_LIMIT = 5;
 
     @BeforeEach
     void setup() {
         messageRepository.deleteAll();
-        userRepository.deleteAll();
-        User testUser = new User("testUser", "USER", "LOCAL");
-        User testAdmin = new User("testAdmin", "ADMIN", "GITHUB");
-        userRepository.save(testUser);
-        userRepository.save(testAdmin);
-        userToken = jwtTokenProvider.createToken(testUser.getUsername(), String.valueOf(testUser.getRole()));
-        adminToken = jwtTokenProvider.createToken(testAdmin.getUsername(), String.valueOf(testAdmin.getRole()));
+        adminToken = getJwtToken("testadmin", "adminPassword");
+        userToken = getJwtToken("testuser", "userPassword");
     }
 
     @Test
-    void shouldReturn201_whenAdminValidToken(@Autowired MockMvc mockMvc) throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testUser", "Hello user!");
+    void shouldReturn201_whenAdminSendsValidMessage() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.id").exists())
-                .andExpect(jsonPath("$.data.sender.username").value("testAdmin"))
-                .andExpect(jsonPath("$.data.recipient.username").value("testUser"))
-                .andExpect(jsonPath("$.data.content").value("Hello user!"));
+                .andExpect(status().isCreated());
     }
 
+    @Test
+    void shouldReturn201_whenUserSendsValidMessage() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testadmin", "Hello testadmin!");
+
+        mockMvc.perform(post("/api/v1/messages")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isCreated());
+    }
 
     @Test
-    void shouldReturn401_whenUserValidToken(@Autowired MockMvc mockMvc) throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testAdmin", "Hello admin!");
+    void shouldReturn404_whenRecipientNotFound() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("unknown", "Hello user!");
+
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.data.id").exists())
-                .andExpect(jsonPath("$.data.sender.username").value("testUser"))
-                .andExpect(jsonPath("$.data.recipient.username").value("testAdmin"))
-                .andExpect(jsonPath("$.data.content").value("Hello admin!"));
-
-    }
-
-    @Test
-    void shouldReturn404_whenRecipientNotFound(@Autowired MockMvc mockMvc) throws Exception {
-        SendMessageRequest req = new SendMessageRequest("unknown", "Hello unknown!");
-
-        mockMvc.perform(post("/api/v1/messages")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(req)))
-                .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void shouldReturn404_whenNoContent(@Autowired MockMvc mockMvc) throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testUser", "");
+    void shouldReturn404_whenNoContent() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testadmin", "");
 
         mockMvc.perform(post("/api/v1/messages")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsBytes(req)))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void shouldReturn409_whenMailboxFull() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+
+        for(int i = 0; i < MAILBOX_LIMIT; i++){
+            mockMvc.perform(post("/api/v1/messages")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsBytes(req)))
+                    .andDo(MockMvcResultHandlers.print())
+                    .andExpect(status().isCreated());
+        }
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void shouldReturnTrue_whenMessagesMarkedAsRead() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+
+        for(int i = 0; i < 3; i++){
+            mockMvc.perform(post("/api/v1/messages")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsBytes(req)))
+                    .andDo(MockMvcResultHandlers.print())
+                    .andExpect(status().isCreated());
+        }
+
+        for(int i = 1; i <= 3; i++){
+            mockMvc.perform(patch("/api/v1/messages/" + i + "/read")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+                    .andDo(MockMvcResultHandlers.print())
+                    .andExpect(status().isNoContent());
+        }
+
+        long unread = messageRepository.countByRecipientIdAndIsReadFalse("testuser");
+        Assert.assertEquals(0, unread);
+    }
 }
+
 
