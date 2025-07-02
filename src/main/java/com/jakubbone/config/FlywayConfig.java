@@ -6,26 +6,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 /**
- * Flyway migration strategy that cleans the schema before migrating.
- * Usage:
- *   - Enable only in development by activating the "dev" profile via application.properties:
- *       spring.profiles.active=dev
- *   - Or programmatically in main application:
- *       SpringApplication app = new SpringApplication(SpringBootMailingApplication.class);
- *       app.setAdditionalProfiles("dev");
- *       app.run(args);
- *
- * WARNING: This will delete all data! Use only in dev.
+ * Flyway migration strategy that cleans the schema before migrating
+ * Enable only in development by activating the "dev" profile via application.properties:
+ *   spring.profiles.active=dev
+ * WARNING: This will delete all data! Use only in dev
  */
-
 @Configuration
-@Profile("dev") // only for development
+@Profile("dev")
 public class FlywayConfig {
     @Bean
     public FlywayMigrationStrategy cleanMigrateStrategy() {
         return flyway -> {
-            flyway.clean();    // Clean database schema before migration
-            flyway.migrate();  // // Apply all migrations from baseline: V1, V2 etc.
+            flyway.clean();
+            flyway.migrate();
         };
     }
 }

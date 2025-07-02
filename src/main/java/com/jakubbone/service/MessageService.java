@@ -25,18 +25,6 @@ public class MessageService {
         this.keycloakUserService = keycloakUserService;
     }
 
-    /**
-     * Sends a message from one user to another.
-     * Checks that recipient exists and sender is not sending to self.
-     * Checks recipient mailbox limit for unread messages.
-     * Sanitizes message content before saving.
-     *
-     * @param fromUsername sender's username
-     * @param toUsername recipient's username
-     * @param content message content
-     * @return saved Message entity
-     * @throws ResponseStatusException if validation fails (e.g., recipient not found, mailbox full)
-     */
     @Transactional
     public Message sendMessage(String fromUsername, String toUsername, String content) {
         if(toUsername.equals(fromUsername)){
@@ -53,6 +41,7 @@ public class MessageService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot send message: Recipient's mailbox is full");
         }
 
+        //HTML sanitization policy to protect against XSS attacks
         String sanitizedContent = sanitizer.sanitize(content);
 
         Message msg = new Message();

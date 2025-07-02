@@ -15,7 +15,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 
 @ControllerAdvice
-// or @RestControllerAdvice -> acts as @ControllerAdvice + @ResponseBody for all methods
 @Log4j2
 public class GlobalExceptionHandler {
 
