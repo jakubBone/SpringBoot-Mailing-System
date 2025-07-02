@@ -50,7 +50,8 @@ public abstract class AbstractIntegrationTest {
             .dependsOn(postgres)
             .waitingFor(Wait.forHttp("/realms/test")
                     .forStatusCode(200)
-                    .withStartupTimeout(Duration.ofMinutes(2))); // act as healthcheck
+                    .withStartupTimeout(Duration.ofMinutes(2)));
+                    // act as healthcheck
 
     @DynamicPropertySource
     static void dynamicProperties(DynamicPropertyRegistry registry) {
