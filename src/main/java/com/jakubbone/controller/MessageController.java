@@ -20,12 +20,6 @@ public class MessageController {
         this.messageService = messageService;
     }
 
-    /**
-     * Endpoint to send a new message.
-     * @param req message data (recipient and content)
-     * @param authentication authentication context of the sender
-     * @return response containing the saved message data
-     */
     @PostMapping
     public ResponseEntity<MessageResponse> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;

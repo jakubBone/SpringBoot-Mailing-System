@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuration of the Keycloak client for connecting to the Keycloak server
- * to manage users and authorization.
+ * to manage users and authorization
  */
 @Configuration
 public class KeycloakConfig {
@@ -26,8 +26,8 @@ public class KeycloakConfig {
     private String adminClientSecret;
 
     /**
-     * Creates and configures the Keycloak admin client bean,
-     * which is used to communicate with the Keycloak server.
+     * Creates and configures the Keycloak admin client bean
+     * which is used to communicate with the Keycloak server
      *
      * @return configured Keycloak client
      */
