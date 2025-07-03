@@ -28,9 +28,4 @@ public class InfoController {
         long uptimeInSeconds = uptimeInMillis / 1000;
         return Collections.singletonMap("uptime", uptimeInSeconds);
     }
-
-    @GetMapping("/roles")
-    public Object debugRoles(Authentication authentication) {
-        return authentication.getAuthorities();
-    }
 }
