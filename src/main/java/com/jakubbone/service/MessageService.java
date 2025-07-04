@@ -54,10 +54,13 @@ public class MessageService {
     }
 
     @Transactional
-    public void markMessageAsRead(Long id) {
-
+    public void markMessageAsRead(Long id, String recipientId) {
         Message msg = messageRepository.findById(id).
                 orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+
+        if(!msg.getRecipientId().equals(recipientId)){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to this message");
+        }
 
         if(!msg.isRead()){
             msg.setRead(true);
