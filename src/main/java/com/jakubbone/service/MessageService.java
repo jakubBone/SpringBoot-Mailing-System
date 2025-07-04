@@ -54,8 +54,8 @@ public class MessageService {
     }
 
     @Transactional
-    public void markMessageAsRead(Long messageId) {
-        Message msg = messageRepository.findById(messageId).
+    public void markMessageAsRead(Long id) {
+        Message msg = messageRepository.findById(id).
                 orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
 
         if(!msg.isRead()){
