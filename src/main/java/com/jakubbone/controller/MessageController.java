@@ -31,8 +31,11 @@ public class MessageController {
     }
 
     @PatchMapping("/{id}/read")
-    public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id) {
-        messageService.markMessageAsRead(id);
+    public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id, Authentication authentication) {
+        JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
+        String recipient = jwt.getToken().getClaim("preferred_username");
+
+        messageService.markMessageAsRead(id, recipient);
         return ResponseEntity.noContent().build();
     }
 }
