@@ -26,16 +26,16 @@ public class MessageService {
     }
 
     @Transactional
-    public Message sendMessage(String fromUsername, String toUsername, String content) {
-        if(toUsername.equals(fromUsername)){
+    public Message sendMessage(String sender, String recipient, String content) {
+        if(recipient.equals(sender)){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot send message to yourself");
         }
 
-        if (!keycloakUserService.existsByUsername(toUsername)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient " + toUsername + " not found");
+        if (!keycloakUserService.existsByUsername(recipient)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient " + recipient + " not found");
         }
 
-        long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(toUsername);
+        long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(recipient);
 
         if(messageCount >= MAILBOX_LIMIT){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot send message: Recipient's mailbox is full");
@@ -45,8 +45,8 @@ public class MessageService {
         String sanitizedContent = sanitizer.sanitize(content);
 
         Message msg = new Message();
-        msg.setSenderId(fromUsername);
-        msg.setRecipientId(toUsername);
+        msg.setSenderId(sender);
+        msg.setRecipientId(recipient);
         msg.setContent(sanitizedContent);
         msg.setTimestamp(LocalDateTime.now());
 
@@ -55,6 +55,7 @@ public class MessageService {
 
     @Transactional
     public void markMessageAsRead(Long id) {
+
         Message msg = messageRepository.findById(id).
                 orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
 
