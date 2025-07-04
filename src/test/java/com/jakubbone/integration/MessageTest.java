@@ -113,6 +113,7 @@ class MessageTest extends AbstractIntegrationTest {
     void shouldReturnTrue_whenMessagesMarkedAsRead() throws Exception {
         SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
 
+        // 'testadmin' sends to 'testuser'
         for(int i = 0; i < 3; i++){
             mockMvc.perform(post("/api/v1/messages")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -122,9 +123,10 @@ class MessageTest extends AbstractIntegrationTest {
                     .andExpect(status().isCreated());
         }
 
+        // 'testuser' reads messages
         for(int i = 1; i <= 3; i++){
             mockMvc.perform(patch("/api/v1/messages/" + i + "/read")
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                     .andDo(MockMvcResultHandlers.print())
                     .andExpect(status().isNoContent());
         }
