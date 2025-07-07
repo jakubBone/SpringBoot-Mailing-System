@@ -32,7 +32,7 @@ public class MessageService {
         }
 
         if (!keycloakUserService.existsByUsername(recipient)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Recipient " + recipient + " not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid recipient:" + recipient);
         }
 
         long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(recipient);
@@ -56,7 +56,7 @@ public class MessageService {
     @Transactional
     public void markMessageAsRead(Long id, String recipientId) {
         Message msg = messageRepository.findById(id).
-                orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+                orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource unavailable"));
 
         if(!msg.getRecipientId().equals(recipientId)){
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to this message");

@@ -14,6 +14,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 
+import static org.springframework.http.HttpStatus.*;
+
 @ControllerAdvice
 @Log4j2
 public class GlobalExceptionHandler {
@@ -39,11 +41,11 @@ public class GlobalExceptionHandler {
         log.error("Illegal argument exception: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                BAD_REQUEST.value(),
+                BAD_REQUEST.getReasonPhrase(),
                 "Invalid argument"
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(BAD_REQUEST).body(error);
     }
 
     // Handles ResponseStatusException (thrown manually with a custom HTTP status)
@@ -51,11 +53,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException e){
         log.warn("Unexpected error occurred: {}", e.getMessage());
+
+        String reason = switch (e.getStatusCode()) {
+            case NOT_FOUND     -> "Resource not available";
+            case CONFLICT      -> "Request conflict";
+            case BAD_REQUEST   -> "Invalid request";
+            default            -> "Request failed";
+        };
+
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
                 e.getStatusCode().value(),
                 e.getStatusCode().toString(),
-                e.getReason() != null ? e.getReason() : "Unexpected error"
+                e.getReason() != null ? e.getReason() : reason
         );
         return ResponseEntity.status(e.getStatusCode()).body(error);
     }
@@ -95,11 +105,11 @@ public class GlobalExceptionHandler {
         log.error("Invalid request data: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                BAD_REQUEST.value(),
+                BAD_REQUEST.getReasonPhrase(),
                 "Invalid request data"
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(BAD_REQUEST).body(error);
     }
 
     // Catches any other unhandled exceptions (generic)
