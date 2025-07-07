@@ -27,11 +27,11 @@ public class GlobalExceptionHandler {
         log.error("JWT error occurred: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
-                HttpStatus.UNAUTHORIZED.value(),
-                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                UNAUTHORIZED.value(),
+                UNAUTHORIZED.getReasonPhrase(),
                 "Invalid JWT token"
         );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        return ResponseEntity.status(UNAUTHORIZED).body(error);
     }
 
     // Handles invalid method arguments (e.g. illegal or unexpected input)
@@ -77,11 +77,11 @@ public class GlobalExceptionHandler {
         log.error("Database error occurred: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                INTERNAL_SERVER_ERROR.value(),
+                INTERNAL_SERVER_ERROR.getReasonPhrase(),
                 "Internal server error"
         );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(error);
     }
 
     // Handles case when user is not found in the system (e.g. during authentication)
@@ -91,11 +91,11 @@ public class GlobalExceptionHandler {
         log.error("User not found: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
-                HttpStatus.UNAUTHORIZED.value(),
-                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                UNAUTHORIZED.value(),
+                UNAUTHORIZED.getReasonPhrase(),
                 "Invalid credentials"
         );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        return ResponseEntity.status(UNAUTHORIZED).body(error);
     }
 
     // Handles validation errors for incoming request data (e.g. @Valid fails)
@@ -119,11 +119,11 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error occurred: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                INTERNAL_SERVER_ERROR.value(),
+                INTERNAL_SERVER_ERROR.getReasonPhrase(),
                 "Unexpected error occurred"
         );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(error);
     }
 
 }
