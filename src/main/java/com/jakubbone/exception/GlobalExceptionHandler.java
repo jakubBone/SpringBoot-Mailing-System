@@ -75,17 +75,17 @@ public class GlobalExceptionHandler {
     }
 
     // Handles case when user is not found in the system (e.g. during authentication)
-    // HTTP Status: 404 Not Found
+    // HTTP Status: 401 Unauthorized
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(UsernameNotFoundException e) {
         log.error("User not found: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                "User not found"
+                HttpStatus.UNAUTHORIZED.value(),
+                HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+                "Invalid credentials"
         );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     // Handles validation errors for incoming request data (e.g. @Valid fails)
