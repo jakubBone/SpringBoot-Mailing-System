@@ -4,7 +4,6 @@ import com.jakubbone.dto.ErrorResponse;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataAccessException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;

@@ -5,6 +5,8 @@ import org.owasp.html.Sanitizers;
 
 import com.jakubbone.model.Message;
 import com.jakubbone.repository.MessageRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +28,7 @@ public class MessageService {
     }
 
     @Transactional
-    public Message sendMessage(String sender, String recipient, String content) {
+    public Message send(String sender, String recipient, String content) {
         if(recipient.equals(sender)){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot send message to yourself");
         }
@@ -54,7 +56,12 @@ public class MessageService {
     }
 
     @Transactional
-    public void markMessageAsRead(Long id, String recipientId) {
+    public Page<Message> read(String recipientId, Pageable pageable) {
+        messageRepository.findByRecipientId(recipientId, pageable);
+    }
+
+    @Transactional
+    public void markAsRead(Long id, String recipientId) {
         Message msg = messageRepository.findById(id).
                 orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource unavailable"));
 
@@ -67,4 +74,6 @@ public class MessageService {
             messageRepository.save(msg);
         }
     }
+
+
 }

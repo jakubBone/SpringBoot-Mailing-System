@@ -5,6 +5,8 @@ import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.model.Message;
 import com.jakubbone.service.MessageService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +27,18 @@ public class MessageController {
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
         String sender = jwt.getToken().getClaim("preferred_username");
 
-        Message savedMessage = messageService.sendMessage(sender, req.getTo(), req.getText());
-        MessageResponse response = MessageResponse.fromEntity(savedMessage);
+        Message savedMsg = messageService.send(sender, req.getTo(), req.getText());
+        MessageResponse response = MessageResponse.fromEntity(savedMsg);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+   @GetMapping
+   public ResponseEntity<Page<MessageResponse>> readMessages(Authentication authentication, Pageable pageable) {
+        JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
+        String recipient = jwt.getToken().getClaim("preferred_username");
+
+        Page<MessageResponse> list = messageService.read(recipient, pageable).map(MessageResponse::fromEntity);
+        return ResponseEntity.status(HttpStatus.CREATED).body(list);
     }
 
     @PatchMapping("/{id}/read")
@@ -35,7 +46,7 @@ public class MessageController {
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
         String recipient = jwt.getToken().getClaim("preferred_username");
 
-        messageService.markMessageAsRead(id, recipient);
+        messageService.markAsRead(id, recipient);
         return ResponseEntity.noContent().build();
     }
 }
