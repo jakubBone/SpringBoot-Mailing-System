@@ -37,8 +37,8 @@ public class MessageController {
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
         String recipient = jwt.getToken().getClaim("preferred_username");
 
-        Page<MessageResponse> list = messageService.read(recipient, pageable).map(MessageResponse::fromEntity);
-        return ResponseEntity.status(HttpStatus.CREATED).body(list);
+        Page<MessageResponse> messages = messageService.read(recipient, pageable).map(MessageResponse::fromEntity);
+        return ResponseEntity.ok(messages);
     }
 
     @PatchMapping("/{id}/read")
