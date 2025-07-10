@@ -57,7 +57,7 @@ public class MessageService {
 
     @Transactional
     public Page<Message> read(String recipientId, Pageable pageable) {
-        messageRepository.findByRecipientId(recipientId, pageable);
+        return messageRepository.findByRecipientId(recipientId, pageable);
     }
 
     @Transactional
