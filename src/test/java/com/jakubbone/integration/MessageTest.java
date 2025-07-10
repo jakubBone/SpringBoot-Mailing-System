@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
@@ -35,12 +36,16 @@ class MessageTest extends AbstractIntegrationTest {
     @Autowired
     MessageRepository messageRepository;
 
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
     String adminToken;
     String userToken;
 
     @BeforeEach
     void setup() {
         messageRepository.deleteAll();
+        jdbcTemplate.execute("ALTER TABLE messages ALTER COLUMN id RESTART WITH 1");
         adminToken = getJwtToken(admin, "adminPassword");
         userToken = getJwtToken(user, "userPassword");
     }
@@ -97,6 +102,7 @@ class MessageTest extends AbstractIntegrationTest {
     void shouldReturn409_whenMailboxFull() throws Exception {
         SendMessageRequest req = new SendMessageRequest(user, "Hello testuser!");
 
+        // Send maximum number of messages
         for(int i = 0; i < MAILBOX_LIMIT; i++){
             mockMvc.perform(post("/api/v1/messages")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -106,12 +112,27 @@ class MessageTest extends AbstractIntegrationTest {
                     .andExpect(status().isCreated());
         }
 
+        // Send one more message when mailbox overloaded
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void shouldReturn409_whenUnauthorized() throws Exception {
+        SendMessageRequest req = new SendMessageRequest(user, "Hello testuser!");
+
+        for(int i = 0; i < MAILBOX_LIMIT; i++){
+            mockMvc.perform(post("/api/v1/messages")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + "unknown")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsBytes(req)))
+                    .andDo(MockMvcResultHandlers.print())
+                    .andExpect(status().isUnauthorized());
+        }
     }
 
     @Test
@@ -166,6 +187,25 @@ class MessageTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content[0].senderUsername").value("testadmin"))
                 .andExpect(jsonPath("$.content[0].recipientUsername").value("testuser"))
                 .andExpect(jsonPath("$.content[0].content").value("Hello testuser!"));
+    }
+
+    @Test
+    void shouldReturn200_andEmptyPageOfMessages_whenRecipientNoHasMessages() throws Exception {
+        mockMvc.perform(get("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.numberOfElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
+    }
+
+    @Test
+    void shouldReturn404_whenUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + "unknown"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isUnauthorized());
     }
 }
 
