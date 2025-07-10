@@ -22,6 +22,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 class MessageTest extends AbstractIntegrationTest {
+    String user = "testuser";
+    String admin = "testadmin";
+    int MAILBOX_LIMIT = 5;
+
     @Autowired
     MockMvc mockMvc;
 
@@ -33,18 +37,17 @@ class MessageTest extends AbstractIntegrationTest {
 
     String adminToken;
     String userToken;
-    int MAILBOX_LIMIT = 5;
 
     @BeforeEach
     void setup() {
         messageRepository.deleteAll();
-        adminToken = getJwtToken("testadmin", "adminPassword");
-        userToken = getJwtToken("testuser", "userPassword");
+        adminToken = getJwtToken(admin, "adminPassword");
+        userToken = getJwtToken(user, "userPassword");
     }
 
     @Test
     void shouldReturn201_whenAdminSendsValidMessage() throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+        SendMessageRequest req = new SendMessageRequest(user, "Hello testuser!");
 
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -56,7 +59,7 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     void shouldReturn201_whenUserSendsValidMessage() throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testadmin", "Hello testadmin!");
+        SendMessageRequest req = new SendMessageRequest(admin, "Hello testadmin!");
 
         mockMvc.perform(post("/api/v1/messages")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
@@ -80,7 +83,7 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     void shouldReturn404_whenNoContent() throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testadmin", "");
+        SendMessageRequest req = new SendMessageRequest(admin, "");
 
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
@@ -92,7 +95,7 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     void shouldReturn409_whenMailboxFull() throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+        SendMessageRequest req = new SendMessageRequest(user, "Hello testuser!");
 
         for(int i = 0; i < MAILBOX_LIMIT; i++){
             mockMvc.perform(post("/api/v1/messages")
