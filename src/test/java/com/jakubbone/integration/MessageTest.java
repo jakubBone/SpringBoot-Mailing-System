@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -133,6 +135,34 @@ class MessageTest extends AbstractIntegrationTest {
 
         long unread = messageRepository.countByRecipientIdAndIsReadFalse("testuser");
         Assert.assertEquals(0, unread);
+    }
+
+    @Test
+    void shouldReturn200_andPageOfMessages_whenRecipientHasMessages() throws Exception {
+        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+
+        // 'testadmin' sends to 'testuser'
+        for(int i = 0; i < 3; i++){
+            mockMvc.perform(post("/api/v1/messages")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(mapper.writeValueAsBytes(req)))
+                    .andDo(MockMvcResultHandlers.print())
+                    .andExpect(status().isCreated());
+        }
+
+        mockMvc.perform(get("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .param("page", "0")
+                        .param("size", "5"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.numberOfElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.content[0].senderUsername").value("testadmin"))
+                .andExpect(jsonPath("$.content[0].recipientUsername").value("testuser"))
+                .andExpect(jsonPath("$.content[0].content").value("Hello testuser!"));
     }
 }
 
