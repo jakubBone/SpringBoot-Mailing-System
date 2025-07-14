@@ -56,8 +56,16 @@ public class MessageService {
     }
 
     @Transactional
-    public Page<Message> read(String recipientId, Pageable pageable) {
-        return messageRepository.findByRecipientId(recipientId, pageable);
+    public Page<Message> readAndMarkAsRead(String recipientId, Pageable pageable) {
+        Page<Message> messages = messageRepository.findByRecipientId(recipientId, pageable);
+
+        messages.getContent().forEach(msg -> {
+            if (!msg.isRead()) {
+                msg.setRead(true);
+            }
+        });
+
+        return messages;
     }
 
     @Transactional
