@@ -41,7 +41,7 @@ public class MessageService {
 
         long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(recipient);
 
-        if(messageCount >= MAILBOX_LIMIT){
+        if(messageCount >= mailboxLimit){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot send message: Recipient's mailbox is full");
         }
 
