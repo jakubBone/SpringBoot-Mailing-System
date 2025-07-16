@@ -47,6 +47,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(BAD_REQUEST).body(error);
     }
 
+    // Handles invalid method arguments (e.g. illegal or unexpected input)
+    // HTTP Status: 400 Bad Request
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){
+        log.error("Method argument not valid exception: {}", e.getMessage());
+        ErrorResponse error = new ErrorResponse(
+                Instant.now().toString(),
+                BAD_REQUEST.value(),
+                BAD_REQUEST.getReasonPhrase(),
+                "Invalid argument"
+        );
+        return ResponseEntity.status(BAD_REQUEST).body(error);
+    }
+
     // Handles ResponseStatusException (thrown manually with a custom HTTP status)
     // HTTP Status: Defined by exception (dynamic)
     @ExceptionHandler(ResponseStatusException.class)
