@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor 
 public class SendMessageRequest {
     @NotBlank(message = "Recipient username cannot be blank")
-    @Pattern(regexp = "^[A-Za-z]{3,10}$",, message = "s")
+    @Pattern(regexp = "^[A-Za-z]{3,10}$", message = "s")
     private String to;
 
     @NotBlank(message = "Message text cannot be blank")
