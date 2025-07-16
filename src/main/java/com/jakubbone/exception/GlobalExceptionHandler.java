@@ -33,11 +33,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(UNAUTHORIZED).body(error);
     }
 
-    // Handles invalid method arguments (invalid or unexpected input)
+    // Handles invalid method arguments (e.g. illegal or unexpected input)
     // HTTP Status: 400 Bad Request
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){
-        log.error("Method argument not valid exception: {}", e.getMessage());
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e){
+        log.error("Illegal argument exception: {}", e.getMessage());
         ErrorResponse error = new ErrorResponse(
                 Instant.now().toString(),
                 BAD_REQUEST.value(),
