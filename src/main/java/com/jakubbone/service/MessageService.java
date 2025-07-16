@@ -5,6 +5,7 @@ import org.owasp.html.Sanitizers;
 
 import com.jakubbone.model.Message;
 import com.jakubbone.repository.MessageRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -16,10 +17,11 @@ import java.time.LocalDateTime;
 
 @Service
 public class MessageService {
+    @Value("${mailbox.limit}")
+    private int mailboxLimit;
+
     private final MessageRepository messageRepository;
     private final KeycloakUserService keycloakUserService;
-    private final int MAILBOX_LIMIT = 5;
-
     private final PolicyFactory sanitizer = Sanitizers.FORMATTING.and(Sanitizers.LINKS);
 
     public MessageService(MessageRepository messageRepository, KeycloakUserService keycloakUserService) {
