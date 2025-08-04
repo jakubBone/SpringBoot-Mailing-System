@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(("/api/v1/messages/**")).hasAnyRole("USER", "ADMIN")
-                        .requestMatchers( "/api/v1/info", "/api/v1/uptime").permitAll()
+                        .requestMatchers("/actuator/**").permitAll() // Allow access to Actuator endpoints
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
