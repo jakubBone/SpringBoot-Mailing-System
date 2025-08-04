@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -136,6 +137,8 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Transactional
+    // The service method countByRecipientIdAndIsReadFalse() call needs the annotation @Transactional
     void shouldReturnTrue_whenMessagesMarkedAsRead() throws Exception {
         SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
 
