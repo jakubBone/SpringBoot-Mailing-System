@@ -6,10 +6,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 /**
- * Flyway migration strategy that cleans the schema before migrating
- * Enable only in development by activating the "dev" profile via application.properties:
- *   spring.profiles.active=dev
- * WARNING: This will delete all data! Use only in dev
+ * Development-only Flyway migration strategy that cleans the database schema before migrating.
+ * This configuration is only active when the 'dev' profile is enabled.
+ * To enable the 'dev' profile, set the environment variable SPRING_PROFILES_ACTIVE=dev.
+ *
+ * WARNING: This is a destructive operation that will delete all data in the database.
+ * It is strictly for use in local development environments.
  */
 @Configuration
 @Profile("dev")
