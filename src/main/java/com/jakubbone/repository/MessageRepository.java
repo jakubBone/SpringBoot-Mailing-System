@@ -10,15 +10,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
-    // Counts unread messages for a given recipient
-    // Lock avoids race condition during mailbox limit check
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    long countByRecipientIdAndIsReadFalse(@Param("recipientId") String recipientId);
 
     Page<Message> findByRecipientId(String recipientId, Pageable pageable);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    long countByRecipientIdAndIsReadFalse(@Param("recipientId") String recipientId);
 
     @Query(value = "SELECT * FROM messages WHERE " +
             "search_vector @@ plainto_tsquery('simple', :query" +
             "ORDER BY timestamp DESC", nativeQuery = true)
     Page<Message> searchMessages(@Param("query") String query, Pageable pageable);
+
+
 }

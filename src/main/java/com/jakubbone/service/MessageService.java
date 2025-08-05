@@ -66,7 +66,6 @@ public class MessageService {
                 msg.setRead(true);
             }
         });
-
         return messages;
     }
 
@@ -83,5 +82,13 @@ public class MessageService {
             msg.setRead(true);
             messageRepository.save(msg);
         }
+    }
+
+    @Transactional
+    public Page<Message>searchMessages(String phrase, Pageable pageable){
+        if(phrase == null || phrase.trim().length() < 2){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query too short");
+        }
+        return  messageRepository.searchMessages(phrase, pageable);
     }
 }
