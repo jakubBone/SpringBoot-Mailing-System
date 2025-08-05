@@ -85,10 +85,10 @@ public class MessageService {
     }
 
     @Transactional
-    public Page<Message>searchMessages(String phrase, Pageable pageable){
+    public Page<Message>searchMessages(String username, String phrase, Pageable pageable){
         if(phrase == null || phrase.trim().length() < 2){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query too short");
         }
-        return  messageRepository.searchMessages(phrase, pageable);
+        return  messageRepository.searchMessages(username, phrase, pageable);
     }
 }

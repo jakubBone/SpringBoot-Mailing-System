@@ -17,9 +17,10 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     long countByRecipientIdAndIsReadFalse(@Param("recipientId") String recipientId);
 
     @Query(value = "SELECT * FROM messages WHERE " +
+            "(sender_id = :username OR recipient_id = :username) AND " +
             "search_vector @@ plainto_tsquery('simple', :query) " +
-            "ORDER BY timestamp DESC", nativeQuery = true)
-    Page<Message> searchMessages(@Param("query") String query, Pageable pageable);
+            "ORDER BY ts_rank(search_vector, plainto_tsquery('simple', :query)) DESC", nativeQuery = true)
+    Page<Message> searchMessages(@Param("username") String username, @Param("query") String query, Pageable pageable);
 
 
 }

@@ -51,8 +51,12 @@ public class MessageController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<MessageResponse>> searchMessages(@RequestParam String phrase, Pageable pageable){
-        Page<MessageResponse> messages = messageService.searchMessages(phrase, pageable).map(MessageResponse::fromEntity);
+    public ResponseEntity<Page<MessageResponse>> searchMessages(@RequestParam String phrase, Authentication authentication, Pageable pageable){
+        JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
+        String username = jwt.getToken().getClaim("preferred_username");
+
+        Page<MessageResponse> messages = messageService.searchMessages(username, phrase, pageable)
+                .map(MessageResponse::fromEntity);
         return ResponseEntity.ok(messages);
     }
 }
