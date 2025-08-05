@@ -17,7 +17,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     long countByRecipientIdAndIsReadFalse(@Param("recipientId") String recipientId);
 
     @Query(value = "SELECT * FROM messages WHERE " +
-            "search_vector @@ plainto_tsquery('simple', :query" +
+            "search_vector @@ plainto_tsquery('simple', :query) " +
             "ORDER BY timestamp DESC", nativeQuery = true)
     Page<Message> searchMessages(@Param("query") String query, Pageable pageable);
 
