@@ -38,8 +38,6 @@ public class MessageController {
         String recipient = jwt.getToken().getClaim("preferred_username");
 
         Page<MessageResponse> messages = messageService.readAndMarkAsRead(recipient, pageable).map(MessageResponse::fromEntity);
-
-
         return ResponseEntity.ok(messages);
     }
 
@@ -50,5 +48,11 @@ public class MessageController {
 
         messageService.markAsRead(id, recipient);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<MessageResponse>> searchMessages(@RequestParam String phrase, Pageable pageable){
+        Page<MessageResponse> messages = messageService.searchMessages(phrase, pageable).map(MessageResponse::fromEntity);
+        return ResponseEntity.ok(messages);
     }
 }
