@@ -47,11 +47,12 @@ class MessageTest extends AbstractIntegrationTest {
     void setup() {
         messageRepository.deleteAll();
         jdbcTemplate.execute("ALTER TABLE messages ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE messages ADD COLUMN IF NOT EXISTS search_vector tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED");
+        jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_messages_search_vector ON messages USING GIN (search_vector)");
         adminToken = getJwtToken(admin, "adminPassword");
         userToken = getJwtToken(user, "userPassword");
     }
 
-    // Helper method for request
     private SendMessageRequest createMessageRequest(String recipient, String content) {
         return new SendMessageRequest(recipient, content);
     }
@@ -147,7 +148,7 @@ class MessageTest extends AbstractIntegrationTest {
     void shouldReturnTrue_whenMessagesMarkedAsRead() throws Exception {
         SendMessageRequest req = createMessageRequest("testuser", "Hello testuser!");
 
-        // 'testadmin' sends to 'testuser'
+        // Send by admin
         for(int i = 0; i < 3; i++){
             mockMvc.perform(post("/api/v1/messages")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -157,7 +158,7 @@ class MessageTest extends AbstractIntegrationTest {
                     .andExpect(status().isCreated());
         }
 
-        // 'testuser' reads messages
+        // Read by user
         for(int i = 1; i <= 3; i++){
             mockMvc.perform(patch("/api/v1/messages/" + i + "/read")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
@@ -173,7 +174,7 @@ class MessageTest extends AbstractIntegrationTest {
     void shouldReturn200_andPageOfMessages_whenRecipientHasMessages() throws Exception {
         SendMessageRequest req = createMessageRequest("testuser", "Hello testuser!");
 
-        // 'testadmin' sends to 'testuser'
+        // Send by admin
         for(int i = 0; i < 3; i++){
             mockMvc.perform(post("/api/v1/messages")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -215,6 +216,55 @@ class MessageTest extends AbstractIntegrationTest {
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void shouldReturn200_andPageOfMessages_whenSearchingForMessages() throws Exception {
+        SendMessageRequest req = createMessageRequest(admin, "Hello testadmin!");
+
+        // Send by user
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isCreated());
+
+        // Search by user
+        mockMvc.perform(get("/api/v1/messages/search")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .param("phrase", "testadmin"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].content").value("Hello testadmin!"));
+
+        // Search by admin
+        mockMvc.perform(get("/api/v1/messages/search")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .param("phrase", "testadmin"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void shouldReturn400_whenSearchPhraseIsTooShort() throws Exception {
+        mockMvc.perform(get("/api/v1/messages/search")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .param("phrase", "a"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn200_andEmptyPage_whenNoMessagesFound() throws Exception {
+        mockMvc.perform(get("/api/v1/messages/search")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .param("phrase", "nonexistent"))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
 }
+
 
 
