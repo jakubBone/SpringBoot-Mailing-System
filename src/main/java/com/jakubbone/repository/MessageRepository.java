@@ -18,8 +18,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     @Query(value = "SELECT * FROM messages WHERE " +
             "(sender_id = :username OR recipient_id = :username) AND " +
-            "search_vector @@ plainto_tsquery('simple', :query) " +
-            "ORDER BY ts_rank(search_vector, plainto_tsquery('simple', :query)) DESC", nativeQuery = true)
+            "search_vector @@ to_tsquery('simple', :query) " +
+            "ORDER BY ts_rank(search_vector, to_tsquery('simple', :query)) DESC", nativeQuery = true)
     Page<Message> searchMessages(@Param("username") String username, @Param("query") String query, Pageable pageable);
 
 
