@@ -51,9 +51,14 @@ class MessageTest extends AbstractIntegrationTest {
         userToken = getJwtToken(user, "userPassword");
     }
 
+    // Helper method for request
+    private SendMessageRequest createMessageRequest(String recipient, String content) {
+        return new SendMessageRequest(recipient, content);
+    }
+
     @Test
-    void shouldReturn201_whenAdminSendsValidMessage() throws Exception {
-        SendMessageRequest req = new SendMessageRequest(user, "Hello testuser!");
+    void shouldReturn201_andSentMessage_whenAdminSendsValidMessage() throws Exception {
+        SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
 
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -64,20 +69,20 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldReturn201_whenUserSendsValidMessage() throws Exception {
-        SendMessageRequest req = new SendMessageRequest(admin, "Hello testadmin!");
+    void shouldReturn201_andSentMessage_whenUserSendsValidMessage() throws Exception {
+        SendMessageRequest req = createMessageRequest(admin, "Hello testadmin!");
 
         mockMvc.perform(post("/api/v1/messages")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsBytes(req)))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isCreated());
     }
 
     @Test
     void shouldReturn404_whenRecipientNotFound() throws Exception {
-        SendMessageRequest req = new SendMessageRequest("unknown", "Hello user!");
+        SendMessageRequest req = createMessageRequest("unknown", "Hello user!");
 
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
@@ -89,7 +94,7 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     void shouldReturn404_whenNoContent() throws Exception {
-        SendMessageRequest req = new SendMessageRequest(admin, "");
+        SendMessageRequest req = createMessageRequest(admin, "");
 
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
@@ -101,7 +106,7 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     void shouldReturn409_whenMailboxFull() throws Exception {
-        SendMessageRequest req = new SendMessageRequest(user, "Hello testuser!");
+        SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
 
         // Send maximum number of messages
         for(int i = 0; i < MAILBOX_LIMIT; i++){
@@ -124,7 +129,7 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     void shouldReturn409_whenUnauthorized() throws Exception {
-        SendMessageRequest req = new SendMessageRequest(user, "Hello testuser!");
+        SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
 
         for(int i = 0; i < MAILBOX_LIMIT; i++){
             mockMvc.perform(post("/api/v1/messages")
@@ -140,7 +145,7 @@ class MessageTest extends AbstractIntegrationTest {
     @Transactional
     // The service method countByRecipientIdAndIsReadFalse() call needs the annotation @Transactional
     void shouldReturnTrue_whenMessagesMarkedAsRead() throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+        SendMessageRequest req = createMessageRequest("testuser", "Hello testuser!");
 
         // 'testadmin' sends to 'testuser'
         for(int i = 0; i < 3; i++){
@@ -166,7 +171,7 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     void shouldReturn200_andPageOfMessages_whenRecipientHasMessages() throws Exception {
-        SendMessageRequest req = new SendMessageRequest("testuser", "Hello testuser!");
+        SendMessageRequest req = createMessageRequest("testuser", "Hello testuser!");
 
         // 'testadmin' sends to 'testuser'
         for(int i = 0; i < 3; i++){
@@ -211,4 +216,5 @@ class MessageTest extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 }
+
 
