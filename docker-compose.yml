@@ -53,16 +53,6 @@ services:
       timeout: 5s
       retries: 10
 
-  elasticsearch:
-    image: elasticsearch:8.11.3
-    container_name: elasticsearch
-    ports:
-    - "9200:9200"
-    environment:
-      - discovery.type=single-node
-      - cluster.name=elasticsearch
-      - xpack.security.enabled=false
-
   app:
     build: .
     env_file:
