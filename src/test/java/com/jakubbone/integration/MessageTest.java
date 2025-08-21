@@ -94,6 +94,18 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldReturn400_whenMessageTooLong() throws Exception {
+        String longMessage = "a".repeat(257); // Exceed the 256 character limit
+        SendMessageRequest req = createMessageRequest(user, longMessage);
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldReturn404_whenNoContent() throws Exception {
         SendMessageRequest req = createMessageRequest(admin, "");
 
