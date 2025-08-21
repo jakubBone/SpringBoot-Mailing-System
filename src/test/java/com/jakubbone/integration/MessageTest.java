@@ -94,6 +94,33 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldReturn400_whenRecipientUsernameInvalid() throws Exception {
+        // Username too short
+        SendMessageRequest req = createMessageRequest("ab", "Hello user!");
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest());
+
+        // Username too long
+        req = createMessageRequest("verylongusername", "Hello user!");
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest());
+
+        // Username with special characters
+        req = createMessageRequest("user123", "Hello user!");
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldReturn400_whenMessageTooLong() throws Exception {
         String longMessage = "a".repeat(257); // Exceed the 256 character limit
         SendMessageRequest req = createMessageRequest(user, longMessage);
