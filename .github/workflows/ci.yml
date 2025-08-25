@@ -1,18 +1,59 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
+name: CI (Maven tests + Docker image)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# Cancel older runs for the same branch/PR to save minutes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  Explore-GitHub-Actions:
+  test-and-build:
     runs-on: ubuntu-latest
+
+    env:
+      MAVEN_OPTS: -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true
+      # Testcontainers uses Docker on the runner; no extra services are required.
+
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
+    steps:
+      - name: Checkout
         uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run unit & integration tests (with Testcontainers)
+        run: mvn -B -e -DskipITs=false -Dtest='*' test
+
+      - name: Package app (skip tests)
+        run: mvn -B -e -DskipTests package
+
+      - name: Upload test reports (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-and-failsafe-reports
+          path: |
+            **/target/surefire-reports/**
+            **/target/failsafe-reports/**
+          if-no-files-found: ignore
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (local)
+        run: docker build --pull --tag myapp:latest .
+
+      - name: Show images
+        run: docker images | head -n 10
