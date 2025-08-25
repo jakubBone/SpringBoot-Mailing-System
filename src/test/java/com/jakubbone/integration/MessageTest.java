@@ -50,9 +50,7 @@ class MessageTest extends AbstractIntegrationTest {
         jdbcTemplate.execute("ALTER TABLE messages ADD COLUMN IF NOT EXISTS search_vector tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED");
         jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_messages_search_vector ON messages USING GIN (search_vector)");
         adminToken = getJwtToken(admin, "adminPassword");
-        // userToken = getJwtToken(user, "userPassword");
-
-        userToken = getJwtToken(user, "incorrect");
+        userToken = getJwtToken(user, "userPassword");
     }
 
     private SendMessageRequest createMessageRequest(String recipient, String content) {
