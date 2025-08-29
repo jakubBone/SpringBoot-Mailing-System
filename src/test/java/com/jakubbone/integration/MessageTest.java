@@ -145,6 +145,19 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldSanitizeHtmlContent_whenSendingMessage() throws Exception {
+        String htmlContent = "Hello <script>alert('xss')</script> <b>bold</b> world!";
+        SendMessageRequest req = createMessageRequest(user, htmlContent);
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.content").value("Hello  <b>bold</b> world!")); // script usunięty
+    }
+
+    @Test
     void shouldReturn404_whenNoContent() throws Exception {
         SendMessageRequest req = createMessageRequest(admin, "");
 
