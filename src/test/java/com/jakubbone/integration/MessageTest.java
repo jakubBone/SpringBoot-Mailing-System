@@ -133,6 +133,18 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldReturn400_whenSendingMessageToSelf() throws Exception {
+        SendMessageRequest req = createMessageRequest(admin, "Hello myself!");
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Cannot send message to yourself"));
+    }
+
+    @Test
     void shouldReturn404_whenNoContent() throws Exception {
         SendMessageRequest req = createMessageRequest(admin, "");
 
