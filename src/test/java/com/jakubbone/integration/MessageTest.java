@@ -172,6 +172,14 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldReturn404_whenMarkingNonExistentMessageAsRead() throws Exception {
+        mockMvc.perform(patch("/api/v1/messages/999/read")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Resource unavailable"));
+    }
+
+    @Test
     void shouldReturn404_whenNoContent() throws Exception {
         SendMessageRequest req = createMessageRequest(admin, "");
 
