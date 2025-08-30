@@ -157,6 +157,20 @@ class MessageTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content").value("Hello  <b>bold</b> world!")); // script usunięty
     }
 
+    void shouldReturn403_whenTryingToReadOtherUsersMessage() throws Exception {
+        SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(patch("/api/v1/messages/1/read")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Access denied to this message"));
+    }
+
     @Test
     void shouldReturn404_whenNoContent() throws Exception {
         SendMessageRequest req = createMessageRequest(admin, "");
