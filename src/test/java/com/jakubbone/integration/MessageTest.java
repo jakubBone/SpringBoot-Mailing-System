@@ -288,34 +288,6 @@ class MessageTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.last").value(true));
     }
 
-    /*@Test
-    void shouldReturn200_andPageOfMessages_whenRecipientHasMessages() throws Exception {
-        SendMessageRequest req = createMessageRequest("testuser", "Hello testuser!");
-
-        // Send by admin
-        for(int i = 0; i < 3; i++){
-            mockMvc.perform(post("/api/v1/messages")
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(mapper.writeValueAsBytes(req)))
-                    .andDo(MockMvcResultHandlers.print())
-                    .andExpect(status().isCreated());
-        }
-
-        mockMvc.perform(get("/api/v1/messages")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
-                        .param("page", "0")
-                        .param("size", "5"))
-                .andDo(MockMvcResultHandlers.print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(3))
-                .andExpect(jsonPath("$.numberOfElements").value(3))
-                .andExpect(jsonPath("$.totalPages").value(1))
-                .andExpect(jsonPath("$.content[0].senderUsername").value("testadmin"))
-                .andExpect(jsonPath("$.content[0].recipientUsername").value("testuser"))
-                .andExpect(jsonPath("$.content[0].content").value("Hello testuser!"));
-    }*/
-
     @Test
     void shouldReturn200_andEmptyPageOfMessages_whenRecipientNoHasMessages() throws Exception {
         mockMvc.perform(get("/api/v1/messages")
