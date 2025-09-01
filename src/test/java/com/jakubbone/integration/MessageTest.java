@@ -288,6 +288,23 @@ class MessageTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.last").value(true));
     }
 
+    // Searching test: edge cases
+    @Test
+    void shouldReturn400_whenSearchPhraseIsEmpty() throws Exception {
+        mockMvc.perform(get("/api/v1/messages/search")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .param("phrase", ""))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400_whenSearchPhraseIsWhitespace() throws Exception {
+        mockMvc.perform(get("/api/v1/messages/search")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .param("phrase", "   "))
+                .andExpect(status().isBadRequest());
+    }
+
     @Test
     void shouldReturn200_andEmptyPageOfMessages_whenRecipientNoHasMessages() throws Exception {
         mockMvc.perform(get("/api/v1/messages")
