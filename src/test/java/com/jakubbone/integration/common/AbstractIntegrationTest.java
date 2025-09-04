@@ -23,11 +23,12 @@ import java.time.Duration;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
-    private static final Network network = Network.newNetwork();
+    // Shared Network in order to avoid MessageTest and ActuatorTest collision
+    private static final Network NET = Network.SHARED;
 
     @Container
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withNetwork(network)
+            .withNetwork(NET)
             .withNetworkAliases("postgres")
             .withUsername("testuser")
             .withPassword("testpass")
@@ -35,7 +36,7 @@ public abstract class AbstractIntegrationTest {
 
     @Container
     private static final KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.2.4")
-            .withNetwork(network)
+            .withNetwork(NET)
             .withNetworkAliases("keycloak")
             .withRealmImportFile("test-realm.json") // From classpath
             .withEnv("KC_FEATURES", "token-exchange")
@@ -111,6 +112,6 @@ public abstract class AbstractIntegrationTest {
 
     @AfterAll
     static void tearDown() {
-        network.close();
+        NET.close();
     }
 }
