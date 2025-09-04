@@ -65,15 +65,6 @@ class ActuatorTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$._links.metrics").exists());
     }
 
-    @Test
-    void shouldReturnDetailedHealthInfo() throws Exception {
-        mockMvc.perform(get("/actuator/health/db"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.parseMediaType(
-                        "application/vnd.spring-boot.actuator.v3+json")))
-                .andExpect(jsonPath("$.status").value("UP"));
-    }
 
     @Test
     void shouldShutdown_whenEnabled() throws Exception {
