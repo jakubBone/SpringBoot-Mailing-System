@@ -6,8 +6,7 @@ Currently, I’m reengineering my original Java-based 'Client-Server Mailing Sys
 and Hibernate (JPA) via Spring Data JPA. The new application features OAuth2/JWT authentication through Keycloak, role-based task management endpoints,
 and robust data persistence.
 
-This project is under active development and will be continuously updated with new features and improvements.
-
+This project is under active development.
 
 ## 📌 Project status
 
