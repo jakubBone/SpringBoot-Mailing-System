@@ -8,6 +8,15 @@ and robust data persistence.
 
 This project is under active development and will be continuously updated with new features and improvements.
 
+
+## 📌 Project status
+
+🚧 **Work in progress** - this project is actively being developed.  
+
+- New features and improvements are added regularly
+- The `Quick start` section is only indicative - there is no packaged release or download yet  
+- Setup instructions will be refined once the project reaches a more stable stage
+
 ## 📖 Tech stack & highlights
 
 - **Designing and building a Spring Boot 3 REST API**
@@ -20,8 +29,11 @@ This project is under active development and will be continuously updated with n
 - **HTML sanitization (OWASP Java HTML Sanitizer) before storing message content**
 - **Testcontainers (Keycloak + PostgreSQL integration tests)** 
 
+## ✅ Continuous Integration
+This project uses **GitHub Actions** as a learning exercise.  
+Every push triggers automated build, test, and integration checks.
 
-## API (short overview)
+## 📡 API (short overview)
 All endpoints require `Authorization: Bearer <JWT>`. Roles: `USER` / `ADMIN`.
 
 - `POST /api/v1/messages` – send a message  
@@ -30,13 +42,18 @@ All endpoints require `Authorization: Bearer <JWT>`. Roles: `USER` / `ADMIN`.
 - `PATCH /api/v1/messages/{id}/read` – mark as read (only recipient can)
 - `GET /api/v1/messages/search?phrase=...` – full-text search in your messages (≥2 chars)
 
-**Business rules examples:**
+### Business rules examples:
 - Cannot message yourself → `400`
 - Recipient must exist in Keycloak
 - Mailbox limit (`mailbox.limit`) enforced → `409` if exceeded
 
 
-## Quick start (local)
+## 🚀 Quick start (local)
+
+> ⚠️ **Note:** This is a *draft* setup description.  
+> Since the project is in progress, there is no release or ready-to-download package yet.  
+> Instructions will evolve as the project matures.
+
 1. Run **Keycloak** and **PostgreSQL** (e.g. via Docker Compose) 
    Provide Keycloak admin client credentials:  
    `keycloak.base-url`, `keycloak.realm`, `keycloak.admin-client-id`, `keycloak.admin-client-secret`.
