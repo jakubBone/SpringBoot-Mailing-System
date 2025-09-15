@@ -1,5 +1,6 @@
 package com.jakubbone.unit;
 
+import com.jakubbone.model.Message;
 import com.jakubbone.repository.MessageRepository;
 import com.jakubbone.service.KeycloakUserService;
 import com.jakubbone.service.MessageService;
@@ -9,10 +10,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,6 +46,8 @@ class MessageServiceTest {
 
     @Test
     void shouldThrowException_whenMailboxFull() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
         String sender = "testuser";
         String recipient = "recipient";
         String content = "Hello";
@@ -58,4 +63,23 @@ class MessageServiceTest {
         assertEquals("Cannot send message: Recipient's mailbox is full", ex.getReason());
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
     }
+
+    @Test
+    void shouldSanitizeContent_whenSendingMessage() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
+        String sender = "testuser";
+        String recipient = "recipient";
+        String content = "Hello <script>alert('XSS')</script> <b>world</b>";
+
+        when(keycloakUserService.existsByUsername(recipient)).thenReturn(true);
+        when(messageRepository.countByRecipientIdAndIsReadFalse(recipient)).thenReturn(1L);
+        when(messageRepository.save(any(Message.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Message msg = messageService.send(sender, recipient, content);
+
+        assertFalse(msg.getContent().contains("<script>"));
+        assertTrue(msg.getContent().contains("<b>world</b>"));
+    }
+
 }
