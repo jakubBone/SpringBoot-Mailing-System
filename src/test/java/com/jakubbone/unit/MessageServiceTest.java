@@ -14,8 +14,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 
+import java.util.Optional;
+
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -82,4 +85,21 @@ class MessageServiceTest {
         assertTrue(msg.getContent().contains("<b>world</b>"));
     }
 
+    @Test
+    void shouldThrowException_whenMarkingNotExistentMessage() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
+        long messageId = 10L;
+        String recipient = "recipient";
+
+        when(messageRepository.findById(messageId)).thenReturn(Optional.empty());
+
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.markAsRead(messageId, recipient)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
 }
