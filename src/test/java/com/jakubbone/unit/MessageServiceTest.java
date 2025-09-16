@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,7 +19,6 @@ import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -89,11 +89,10 @@ class MessageServiceTest {
     void shouldThrowException_whenMarkingNotExistentMessage() {
         ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
 
-        long messageId = 10L;
+        long messageId = 1L;
         String recipient = "recipient";
 
         when(messageRepository.findById(messageId)).thenReturn(Optional.empty());
-
 
         ResponseStatusException ex = assertThrows(
                 ResponseStatusException.class,
@@ -101,5 +100,47 @@ class MessageServiceTest {
         );
 
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test
+    void shouldThrowException_whenMarkingOtherUser() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
+        long messageId = 1L;
+        String recipient = "testuser";
+        Message msg = new Message();
+        msg.setRecipientId("otheruser");
+
+        when(messageRepository.findById(messageId)).thenReturn(Optional.of(msg));
+
+
+
+        ResponseStatusException ex = assertThrows(
+                        ResponseStatusException.class,
+                () -> messageService.markAsRead(messageId, recipient)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    void shouldThrowException_whenSearchPhraseEmpty() {
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.searchMessages("testuser", "", Pageable.unpaged())
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Query too short", ex.getReason());
+    }
+
+    @Test
+    void shouldThrowException_whenSearchPhraseTooShort() {
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.searchMessages("testuser", "a", Pageable.unpaged())
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
     }
 }
