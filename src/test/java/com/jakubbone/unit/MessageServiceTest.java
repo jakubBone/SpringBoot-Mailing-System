@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -115,10 +116,31 @@ class MessageServiceTest {
 
 
         ResponseStatusException ex = assertThrows(
-                ResponseStatusException.class,
+                        ResponseStatusException.class,
                 () -> messageService.markAsRead(messageId, recipient)
         );
 
         assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    void shouldThrowException_whenSearchPhraseEmpty() {
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.searchMessages("testuser", "", Pageable.unpaged())
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Query too short", ex.getReason());
+    }
+
+    @Test
+    void shouldThrowException_whenSearchPhraseTooShort() {
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.searchMessages("testuser", "a", Pageable.unpaged())
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
     }
 }
