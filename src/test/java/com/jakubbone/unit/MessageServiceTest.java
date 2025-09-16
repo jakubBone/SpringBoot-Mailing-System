@@ -18,7 +18,6 @@ import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -89,11 +88,10 @@ class MessageServiceTest {
     void shouldThrowException_whenMarkingNotExistentMessage() {
         ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
 
-        long messageId = 10L;
+        long messageId = 1L;
         String recipient = "recipient";
 
         when(messageRepository.findById(messageId)).thenReturn(Optional.empty());
-
 
         ResponseStatusException ex = assertThrows(
                 ResponseStatusException.class,
@@ -101,5 +99,26 @@ class MessageServiceTest {
         );
 
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test
+    void shouldThrowException_whenMarkingOtherUser() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
+        long messageId = 1L;
+        String recipient = "testuser";
+        Message msg = new Message();
+        msg.setRecipientId("otheruser");
+
+        when(messageRepository.findById(messageId)).thenReturn(Optional.of(msg));
+
+
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.markAsRead(messageId, recipient)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
     }
 }
