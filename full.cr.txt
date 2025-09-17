@@ -646,6 +646,88 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
 }
 
 ====================
+FILE: ActuatorTest.java
+
+package com.jakubbone.integration;
+
+import com.jakubbone.integration.common.AbstractIntegrationTest;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.hamcrest.Matchers.*;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@AutoConfigureMockMvc
+class ActuatorTest extends AbstractIntegrationTest {
+
+    @Autowired MockMvc mockMvc;
+
+    @Test
+    void shouldReturnActuatorHealth() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.parseMediaType(
+                        "application/vnd.spring-boot.actuator.v3+json")))
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
+
+    @Test
+    void shouldReturnApplicationInfo() throws Exception {
+        mockMvc.perform(get("/actuator/info"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.parseMediaType(
+                        "application/vnd.spring-boot.actuator.v3+json")))
+                .andExpect(jsonPath("$.app.name").value("SpringBootMailingSystem"))
+                .andExpect(jsonPath("$.app.version").value("0.0.1-SNAPSHOT")); // lub z properties
+    }
+
+    @Test
+    void shouldReturnUptimeMetric() throws Exception {
+        mockMvc.perform(get("/actuator/metrics/process.uptime"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.parseMediaType(
+                        "application/vnd.spring-boot.actuator.v3+json")))
+                .andExpect(jsonPath("$.name").value("process.uptime"))
+                .andExpect(jsonPath("$.measurements", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$.measurements[0].value", greaterThanOrEqualTo(0.0)));
+    }
+
+    @Test
+    void shouldReturnAvailableEndpoints() throws Exception {
+        mockMvc.perform(get("/actuator"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.parseMediaType(
+                        "application/vnd.spring-boot.actuator.v3+json")))
+                .andExpect(jsonPath("$._links.self").exists())
+                .andExpect(jsonPath("$._links.health").exists())
+                .andExpect(jsonPath("$._links.info").exists())
+                .andExpect(jsonPath("$._links.metrics").exists());
+    }
+
+
+    @Test
+    void shouldShutdown_whenEnabled() throws Exception {
+        mockMvc.perform(post("/actuator/shutdown"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.parseMediaType(
+                        "application/vnd.spring-boot.actuator.v3+json")))
+                .andExpect(jsonPath("$.message", containsStringIgnoringCase("Shutting down")));
+    }
+}
+
+====================
 FILE: AbstractIntegrationTest.java
 
 package com.jakubbone.integration.common;
@@ -673,11 +755,12 @@ import java.time.Duration;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
-    private static final Network network = Network.newNetwork();
+    // Shared Network in order to avoid MessageTest and ActuatorTest collision
+    private static final Network NET = Network.SHARED;
 
     @Container
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withNetwork(network)
+            .withNetwork(NET)
             .withNetworkAliases("postgres")
             .withUsername("testuser")
             .withPassword("testpass")
@@ -685,7 +768,7 @@ public abstract class AbstractIntegrationTest {
 
     @Container
     private static final KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.2.4")
-            .withNetwork(network)
+            .withNetwork(NET)
             .withNetworkAliases("keycloak")
             .withRealmImportFile("test-realm.json") // From classpath
             .withEnv("KC_FEATURES", "token-exchange")
@@ -761,7 +844,7 @@ public abstract class AbstractIntegrationTest {
 
     @AfterAll
     static void tearDown() {
-        network.close();
+        NET.close();
     }
 }
 
@@ -864,6 +947,92 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldReturn400_whenRecipientUsernameInvalid() throws Exception {
+        // Username too short
+        SendMessageRequest req = createMessageRequest("ab", "Hello user!");
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest());
+
+        // Username too long
+        req = createMessageRequest("verylongusername", "Hello user!");
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest());
+
+        // Username with special characters
+        req = createMessageRequest("user123", "Hello user!");
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400_whenMessageTooLong() throws Exception {
+        String longMessage = "a".repeat(257); // Exceed the 256 character limit
+        SendMessageRequest req = createMessageRequest(user, longMessage);
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400_whenSendingMessageToSelf() throws Exception {
+        SendMessageRequest req = createMessageRequest(admin, "Hello myself!");
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Cannot send message to yourself"));
+    }
+
+    @Test
+    void shouldSanitizeHtmlContent_whenSendingMessage() throws Exception {
+        String htmlContent = "Hello <script>alert('xss')</script> <b>bold</b> world!";
+        SendMessageRequest req = createMessageRequest(user, htmlContent);
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.content").value("Hello  <b>bold</b> world!")); // script usunięty
+    }
+
+    void shouldReturn403_whenTryingToReadOtherUsersMessage() throws Exception {
+        SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
+        mockMvc.perform(post("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(patch("/api/v1/messages/1/read")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Access denied to this message"));
+    }
+
+    @Test
+    void shouldReturn404_whenMarkingNonExistentMessageAsRead() throws Exception {
+        mockMvc.perform(patch("/api/v1/messages/999/read")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Resource unavailable"));
+    }
+
+    @Test
     void shouldReturn404_whenNoContent() throws Exception {
         SendMessageRequest req = createMessageRequest(admin, "");
 
@@ -941,31 +1110,52 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldReturn200_andPageOfMessages_whenRecipientHasMessages() throws Exception {
-        SendMessageRequest req = createMessageRequest("testuser", "Hello testuser!");
-
-        // Send by admin
-        for(int i = 0; i < 3; i++){
+    void shouldReturnCorrectPage_whenPaginatingMessages() throws Exception {
+        for(int i = 1; i <= 4; i++) {
+            SendMessageRequest req = createMessageRequest(user, "Message " + i);
             mockMvc.perform(post("/api/v1/messages")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(mapper.writeValueAsBytes(req)))
-                    .andDo(MockMvcResultHandlers.print())
                     .andExpect(status().isCreated());
         }
 
         mockMvc.perform(get("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .param("page", "0")
-                        .param("size", "5"))
-                .andDo(MockMvcResultHandlers.print())
+                        .param("size", "2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(3))
-                .andExpect(jsonPath("$.numberOfElements").value(3))
-                .andExpect(jsonPath("$.totalPages").value(1))
-                .andExpect(jsonPath("$.content[0].senderUsername").value("testadmin"))
-                .andExpect(jsonPath("$.content[0].recipientUsername").value("testuser"))
-                .andExpect(jsonPath("$.content[0].content").value("Hello testuser!"));
+                .andExpect(jsonPath("$.totalElements").value(4))
+                .andExpect(jsonPath("$.numberOfElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.first").value(true))
+                .andExpect(jsonPath("$.last").value(false));
+
+        mockMvc.perform(get("/api/v1/messages")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .param("page", "1")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.numberOfElements").value(2))
+                .andExpect(jsonPath("$.first").value(false))
+                .andExpect(jsonPath("$.last").value(true));
+    }
+
+    // Searching test: edge cases
+    @Test
+    void shouldReturn400_whenSearchPhraseIsEmpty() throws Exception {
+        mockMvc.perform(get("/api/v1/messages/search")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .param("phrase", ""))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400_whenSearchPhraseIsWhitespace() throws Exception {
+        mockMvc.perform(get("/api/v1/messages/search")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .param("phrase", "   "))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -980,10 +1170,20 @@ class MessageTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldReturn404_whenUnauthorized() throws Exception {
+    void shouldReturn404_whenExpiredOrInvalid() throws Exception {
         mockMvc.perform(get("/api/v1/messages")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + "unknown"))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + "invalid"))
                 .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturn401_whenNoAuthorizationHeader() throws Exception {
+        SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
+
+        mockMvc.perform(post("/api/v1/messages")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -1038,4 +1238,229 @@ class MessageTest extends AbstractIntegrationTest {
 
 
 
+
+====================
+FILE: KeycloakUserServiceTest.java
+
+package com.jakubbone.unit;
+
+import com.jakubbone.service.KeycloakUserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class KeycloakUserServiceTest {
+    @Mock
+    Keycloak keycloakAdminClient;
+
+    @InjectMocks
+    KeycloakUserService keycloakUserService;
+
+    @Mock
+    RealmResource realmResource;
+
+    @Mock
+    UsersResource usersResource;
+
+    @BeforeEach
+    void setup(){
+        ReflectionTestUtils.setField(keycloakUserService, "keycloakRealm", "testRealm");
+    }
+
+    @Test
+    void shouldReturnTrue_WhenUserExists(){
+        String username = "testuser";
+        List<UserRepresentation> users = Arrays.asList(new UserRepresentation());
+
+
+        when(keycloakAdminClient.realm("testRealm")).thenReturn(realmResource);
+        when(keycloakAdminClient.realm("testRealm").users()).thenReturn(usersResource);
+        when(keycloakAdminClient.realm("testRealm").users().searchByUsername(username,true)).thenReturn(users);
+
+        boolean exists = keycloakUserService.existsByUsername(username);
+
+        assertTrue(exists);
+    }
+
+    @Test
+    void shouldReturnTrue_WhenUserDoesNotExist(){
+        String username = "nonexistent";
+        List<UserRepresentation> users = Collections.emptyList();
+
+        when(keycloakAdminClient.realm("testRealm")).thenReturn(realmResource);
+        when(keycloakAdminClient.realm("testRealm").users()).thenReturn(usersResource);
+        when(keycloakAdminClient.realm("testRealm").users().searchByUsername(username,true)).thenReturn(users);
+
+        boolean exists = keycloakUserService.existsByUsername(username);
+
+        assertFalse(exists);
+    }
+}
+
+====================
+FILE: MessageServiceTest.java
+
+package com.jakubbone.unit;
+
+import com.jakubbone.model.Message;
+import com.jakubbone.repository.MessageRepository;
+import com.jakubbone.service.KeycloakUserService;
+import com.jakubbone.service.MessageService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
+
+
+import java.util.Optional;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class MessageServiceTest {
+    @Mock
+    MessageRepository messageRepository;
+
+    @Mock
+    KeycloakUserService keycloakUserService;
+
+    @InjectMocks
+    MessageService messageService;
+
+    @Test
+    void shouldThrowException_whenSendingToSelf() {
+        String sender = "testuser";
+        String recipient = "testuser";
+        String content = "Hello";
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.send(sender, recipient, content)
+        );
+
+        assertEquals("Cannot send message to yourself", ex.getReason());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    void shouldThrowException_whenMailboxFull() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
+        String sender = "testuser";
+        String recipient = "recipient";
+        String content = "Hello";
+
+        when(keycloakUserService.existsByUsername(recipient)).thenReturn(true);
+        when(messageRepository.countByRecipientIdAndIsReadFalse(recipient)).thenReturn(5L);
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.send(sender, recipient, content)
+        );
+
+        assertEquals("Cannot send message: Recipient's mailbox is full", ex.getReason());
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
+    }
+
+    @Test
+    void shouldSanitizeContent_whenSendingMessage() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
+        String sender = "testuser";
+        String recipient = "recipient";
+        String content = "Hello <script>alert('XSS')</script> <b>world</b>";
+
+        when(keycloakUserService.existsByUsername(recipient)).thenReturn(true);
+        when(messageRepository.countByRecipientIdAndIsReadFalse(recipient)).thenReturn(1L);
+        when(messageRepository.save(any(Message.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Message msg = messageService.send(sender, recipient, content);
+
+        assertFalse(msg.getContent().contains("<script>"));
+        assertTrue(msg.getContent().contains("<b>world</b>"));
+    }
+
+    @Test
+    void shouldThrowException_whenMarkingNotExistentMessage() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
+        long messageId = 1L;
+        String recipient = "recipient";
+
+        when(messageRepository.findById(messageId)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.markAsRead(messageId, recipient)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test
+    void shouldThrowException_whenMarkingOtherUser() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
+        long messageId = 1L;
+        String recipient = "testuser";
+        Message msg = new Message();
+        msg.setRecipientId("otheruser");
+
+        when(messageRepository.findById(messageId)).thenReturn(Optional.of(msg));
+
+
+
+        ResponseStatusException ex = assertThrows(
+                        ResponseStatusException.class,
+                () -> messageService.markAsRead(messageId, recipient)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
+
+    @Test
+    void shouldThrowException_whenSearchPhraseEmpty() {
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.searchMessages("testuser", "", Pageable.unpaged())
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("Query too short", ex.getReason());
+    }
+
+    @Test
+    void shouldThrowException_whenSearchPhraseTooShort() {
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.searchMessages("testuser", "a", Pageable.unpaged())
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+}
 

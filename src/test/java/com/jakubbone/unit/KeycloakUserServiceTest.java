@@ -68,4 +68,17 @@ public class KeycloakUserServiceTest {
 
         assertFalse(exists);
     }
+
+    @Test
+    void shouldReturnFalse_whenSearchReturnsNull() {
+        String username = "testuser";
+
+        when(keycloakAdminClient.realm("testRealm")).thenReturn(realmResource);
+        when(realmResource.users()).thenReturn(usersResource);
+        when(usersResource.searchByUsername(username, true)).thenReturn(null);
+
+        boolean exists = keycloakUserService.existsByUsername(username);
+
+        assertFalse(exists);
+    }
 }
