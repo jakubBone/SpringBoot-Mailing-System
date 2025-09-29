@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class MessageService {
@@ -67,11 +68,25 @@ public class MessageService {
     public Page<Message> readAndMarkAsRead(String recipientId, Pageable pageable) {
         Page<Message> messages = messageRepository.findByRecipientId(recipientId, pageable);
 
-        messages.getContent().forEach(msg -> {
-            if (!msg.isRead()) {
-                msg.setRead(true);
+        if (!messages.isEmpty()) {
+            List<Long> unreadMessageIds = messages.getContent().stream()
+                    .filter(msg -> !msg.isRead())
+                    .map(Message::getId)
+                    .toList();
+
+            if (!unreadMessageIds.isEmpty()) {
+                // Bulk update (for all messages instantly in DB)
+                messageRepository.markMessagesAsRead(unreadMessageIds);
+
+                // Update in-memory messages to reflect DB changes
+                messages.getContent().forEach(msg -> {
+                    if (unreadMessageIds.contains(msg.getId())) {
+                        msg.setRead(true);
+                    }
+                });
             }
-        });
+        }
+
         return messages;
     }
 
