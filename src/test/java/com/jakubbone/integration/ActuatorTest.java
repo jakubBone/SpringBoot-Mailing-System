@@ -4,11 +4,11 @@ import com.jakubbone.integration.common.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.*;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -19,8 +19,10 @@ class ActuatorTest extends AbstractIntegrationTest {
 
     @Autowired MockMvc mockMvc;
 
+    // Public endpoints - no authentication required
+
     @Test
-    void shouldReturnActuatorHealth() throws Exception {
+    void shouldReturnActuatorHealth_withoutAuth() throws Exception {
         mockMvc.perform(get("/actuator/health"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -30,19 +32,24 @@ class ActuatorTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldReturnApplicationInfo() throws Exception {
+    void shouldReturnApplicationInfo_withoutAuth() throws Exception {
         mockMvc.perform(get("/actuator/info"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.parseMediaType(
                         "application/vnd.spring-boot.actuator.v3+json")))
                 .andExpect(jsonPath("$.app.name").value("SpringBootMailingSystem"))
-                .andExpect(jsonPath("$.app.version").value("0.0.1-SNAPSHOT")); // lub z properties
+                .andExpect(jsonPath("$.app.version").value("0.0.1-SNAPSHOT"));
     }
 
+    // Protected endpoints - require ADMIN role
+
     @Test
-    void shouldReturnUptimeMetric() throws Exception {
-        mockMvc.perform(get("/actuator/metrics/process.uptime"))
+    void shouldReturnUptimeMetric_whenAdminAuthenticated() throws Exception {
+        String adminToken = getJwtToken("testadmin", "adminPassword");
+
+        mockMvc.perform(get("/actuator/metrics/process.uptime")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.parseMediaType(
@@ -53,8 +60,28 @@ class ActuatorTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldReturnAvailableEndpoints() throws Exception {
-        mockMvc.perform(get("/actuator"))
+    void shouldReturn403_whenUserTriesToAccessMetrics() throws Exception {
+        String userToken = getJwtToken("testuser", "userPassword");
+
+        mockMvc.perform(get("/actuator/metrics/process.uptime")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andDo(print())
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldReturn401_whenAccessingMetricsWithoutAuth() throws Exception {
+        mockMvc.perform(get("/actuator/metrics/process.uptime"))
+                .andDo(print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturnAvailableEndpoints_whenAdminAuthenticated() throws Exception {
+        String adminToken = getJwtToken("testadmin", "adminPassword");
+
+        mockMvc.perform(get("/actuator")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.parseMediaType(
@@ -65,14 +92,41 @@ class ActuatorTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$._links.metrics").exists());
     }
 
+    // Shutdown endpoint tests
 
     @Test
-    void shouldShutdown_whenEnabled() throws Exception {
+    void shouldReturn403_whenUserTriesToShutdown() throws Exception {
+        String userToken = getJwtToken("testuser", "userPassword");
+
+        mockMvc.perform(post("/actuator/shutdown")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andDo(print())
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldReturn401_whenShutdownWithoutAuth() throws Exception {
         mockMvc.perform(post("/actuator/shutdown"))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.parseMediaType(
-                        "application/vnd.spring-boot.actuator.v3+json")))
-                .andExpect(jsonPath("$.message", containsStringIgnoringCase("Shutting down")));
+                .andExpect(status().isUnauthorized());
+    }
+
+    // Security tests - verify endpoints are properly protected
+
+    @Test
+    void shouldReturn401_whenAccessingRootActuatorWithoutAuth() throws Exception {
+        mockMvc.perform(get("/actuator"))
+                .andDo(print())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturn403_whenUserAccessesRootActuator() throws Exception {
+        String userToken = getJwtToken("testuser", "userPassword");
+
+        mockMvc.perform(get("/actuator")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andDo(print())
+                .andExpect(status().isForbidden());
     }
 }
