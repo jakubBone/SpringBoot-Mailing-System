@@ -13,7 +13,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     Page<Message> findByRecipientId(String recipientId, Pageable pageable);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     long countByRecipientIdAndIsReadFalse(@Param("recipientId") String recipientId);
 
     @Query(value = "SELECT * FROM messages WHERE " +
