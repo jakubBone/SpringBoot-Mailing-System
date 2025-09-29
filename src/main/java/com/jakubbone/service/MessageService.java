@@ -24,6 +24,9 @@ public class MessageService {
     private final KeycloakUserService keycloakUserService;
     private final PolicyFactory sanitizer = Sanitizers.FORMATTING.and(Sanitizers.LINKS);
 
+    // Synchronization object to prevent race conditions when checking mailbox limits
+    private final Object mailboxLock = new Object();
+
     public MessageService(MessageRepository messageRepository, KeycloakUserService keycloakUserService) {
         this.messageRepository = messageRepository;
         this.keycloakUserService = keycloakUserService;
@@ -39,22 +42,25 @@ public class MessageService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid recipient:" + recipient);
         }
 
-        long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(recipient);
+        // Synchronizacja całej operacji sprawdzania limitu i zapisu
+        synchronized (mailboxLock) {
+            long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(recipient);
 
-        if(messageCount >= mailboxLimit){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot send message: Recipient's mailbox is full");
+            if(messageCount >= mailboxLimit){
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot send message: Recipient's mailbox is full");
+            }
+
+            // HTML sanitization policy to protect against XSS attacks
+            String sanitizedContent = sanitizer.sanitize(content);
+
+            Message msg = new Message();
+            msg.setSenderId(sender);
+            msg.setRecipientId(recipient);
+            msg.setContent(sanitizedContent);
+            msg.setTimestamp(LocalDateTime.now());
+
+            return messageRepository.save(msg);
         }
-
-        //HTML sanitization policy to protect against XSS attacks
-        String sanitizedContent = sanitizer.sanitize(content);
-
-        Message msg = new Message();
-        msg.setSenderId(sender);
-        msg.setRecipientId(recipient);
-        msg.setContent(sanitizedContent);
-        msg.setTimestamp(LocalDateTime.now());
-
-        return messageRepository.save(msg);
     }
 
     @Transactional
