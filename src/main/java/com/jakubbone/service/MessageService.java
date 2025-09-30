@@ -54,7 +54,6 @@ public class MessageService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid recipient:" + recipient);
         }
 
-        // Synchronizacja całej operacji sprawdzania limitu i zapisu
         synchronized (mailboxLock) {
             long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(recipient);
 
