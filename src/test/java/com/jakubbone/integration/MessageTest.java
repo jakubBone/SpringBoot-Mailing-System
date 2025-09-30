@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -26,7 +27,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MessageTest extends AbstractIntegrationTest {
     String user = "testuser";
     String admin = "testadmin";
-    int MAILBOX_LIMIT = 5;
+
+    @Value("${mailbox.limit}")
+    int mailboxLimit = 5;
 
     @Autowired
     MockMvc mockMvc;
@@ -197,7 +200,7 @@ class MessageTest extends AbstractIntegrationTest {
         SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
 
         // Send maximum number of messages
-        for(int i = 0; i < MAILBOX_LIMIT; i++){
+        for(int i = 0; i < mailboxLimit; i++){
             mockMvc.perform(post("/api/v1/messages")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -219,7 +222,7 @@ class MessageTest extends AbstractIntegrationTest {
     void shouldReturn409_whenUnauthorized() throws Exception {
         SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
 
-        for(int i = 0; i < MAILBOX_LIMIT; i++){
+        for(int i = 0; i < mailboxLimit; i++){
             mockMvc.perform(post("/api/v1/messages")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + "unknown")
                             .contentType(MediaType.APPLICATION_JSON)
