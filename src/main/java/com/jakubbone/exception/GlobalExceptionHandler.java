@@ -15,12 +15,17 @@ import java.time.Instant;
 
 import static org.springframework.http.HttpStatus.*;
 
+
 @ControllerAdvice
 @Log4j2
 public class GlobalExceptionHandler {
 
-    // Handles JWT-related exceptions (e.g. invalid or expired token)
-    // HTTP Status: 401 Unauthorized
+    /**
+     * Handles JWT-related exceptions such as invalid or expired tokens.
+     *
+     * @param e the JWT exception
+     * @return error response with HTTP 401 Unauthorized
+     */
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ErrorResponse> handleJwtException(JwtException e){
         log.error("JWT error occurred: {}", e.getMessage());
@@ -33,8 +38,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(UNAUTHORIZED).body(error);
     }
 
-    // Handles invalid method arguments (e.g. illegal or unexpected input)
-    // HTTP Status: 400 Bad Request
+    /**
+     * Handles illegal method arguments.
+     *
+     * @param e the illegal argument exception
+     * @return error response with HTTP 400 Bad Request
+     */t
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e){
         log.error("Illegal argument exception: {}", e.getMessage());
@@ -47,8 +56,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(BAD_REQUEST).body(error);
     }
 
-    // Handles ResponseStatusException (thrown manually with a custom HTTP status)
-    // HTTP Status: Defined by exception (dynamic)
+    /**
+     * Handles custom exceptions thrown with specific HTTP status codes.
+     *
+     * @param e the response status exception
+     * @return error response with the HTTP status from the exception
+     */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException e){
         log.warn("Unexpected error occurred: {}", e.getMessage());
@@ -69,8 +82,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(e.getStatusCode()).body(error);
     }
 
-    // Handles database-related exceptions
-    // HTTP Status: 500 Internal Server Error
+    /**
+     * Handles database-related exceptions.
+     *
+     * @param e the data access exception
+     * @return error response with HTTP 500 Internal Server Error
+     */
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException e) {
         log.error("Database error occurred: {}", e.getMessage());
@@ -83,8 +100,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(error);
     }
 
-    // Handles case when user is not found in the system (e.g. during authentication)
-    // HTTP Status: 401 Unauthorized
+    /**
+     * Handles username not found during authentication.
+     *
+     * @param e the username not found exception
+     * @return error response with HTTP 401 Unauthorized
+     */
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(UsernameNotFoundException e) {
         log.error("User not found: {}", e.getMessage());
@@ -97,8 +118,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(UNAUTHORIZED).body(error);
     }
 
-    // Handles validation errors for incoming request data (e.g. @Valid fails)
-    // HTTP Status: 400 Bad Request
+    /**
+     * Handles validation errors for incoming request data (triggered by @Valid).
+     *
+     * @param e the method argument not valid exception
+     * @return error response with HTTP 400 Bad Request
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e) {
         log.error("Invalid request data: {}", e.getMessage());
@@ -111,8 +136,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(BAD_REQUEST).body(error);
     }
 
-    // Catches any other unhandled exceptions (generic)
-    // HTTP Status: 500 Internal Server Error
+    /**
+     * Catches all other unhandled exceptions.
+     * This is a fallback handler to prevent exposing stack traces to clients.
+     *
+     * @param e the generic exception
+     * @return error response with HTTP 500 Internal Server Error
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
         log.error("Unexpected error occurred: {}", e.getMessage());
