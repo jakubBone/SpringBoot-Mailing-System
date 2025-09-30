@@ -28,7 +28,12 @@ public class KeycloakUserService {
         this.keycloakAdminClient = keycloakAdminClient;
     }
 
-    // Checks if a user with the given username exists in the configured realm
+    /**
+     * Checks if a user with the given username exists in Keycloak realm.
+     *
+     * @param username the username to check
+     * @return true if user exists, false otherwise
+     */
     public boolean existsByUsername(String username) {
         List<UserRepresentation> users = keycloakAdminClient.realm(keycloakRealm).users().searchByUsername(username, true);
         return users != null && !users.isEmpty();
