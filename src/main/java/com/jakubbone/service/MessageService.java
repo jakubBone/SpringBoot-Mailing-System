@@ -33,6 +33,17 @@ public class MessageService {
         this.keycloakUserService = keycloakUserService;
     }
 
+    /**
+     * Sends a message from one user to another with validation and sanitization.
+     * Checks mailbox capacity before sending.
+     *
+     * @param sender the username of the sender
+     * @param recipient the username of the recipient
+     * @param content the message content (will be HTML sanitized)
+     * @return the saved message entity
+     * @throws ResponseStatusException if sending to self (400), recipient not found (404),
+     *                                 or mailbox full (409)
+     */
     @Transactional
     public Message send(String sender, String recipient, String content) {
         if(recipient.equals(sender)){
@@ -64,6 +75,14 @@ public class MessageService {
         }
     }
 
+    /**
+     * Retrieves paginated messages for a recipient and marks them as read using bulk update.
+     * Uses atomic database operation to prevent race conditions.
+     *
+     * @param recipientId the recipient username
+     * @param pageable pagination parameters
+     * @return page of messages (updated to read status)
+     */
     @Transactional
     public Page<Message> readAndMarkAsRead(String recipientId, Pageable pageable) {
         Page<Message> messages = messageRepository.findByRecipientId(recipientId, pageable);
@@ -90,6 +109,14 @@ public class MessageService {
         return messages;
     }
 
+    /**
+     * Marks a single message as read for the specified recipient.
+     * Verifies that the recipient owns the message before updating.
+     *
+     * @param id the message ID to mark as read
+     * @param recipientId the username of the recipient
+     * @throws ResponseStatusException if message not found (404) or access denied (403)
+     */
     @Transactional
     public void markAsRead(Long id, String recipientId) {
         Message msg = messageRepository.findById(id).
@@ -105,6 +132,16 @@ public class MessageService {
         }
     }
 
+    /**
+     * Searches messages using PostgreSQL full-text search.
+     * Returns messages where the user is either sender or recipient.
+     *
+     * @param username the user performing the search
+     * @param phrase the search phrase (minimum 2 characters required)
+     * @param pageable pagination parameters
+     * @return page of messages matching the search phrase, ranked by relevance
+     * @throws ResponseStatusException if phrase is too short (400)
+     */
     @Transactional
     public Page<Message>searchMessages(String username, String phrase, Pageable pageable){
         if(phrase == null || phrase.trim().length() < 2){

@@ -16,11 +16,27 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     long countByRecipientIdAndIsReadFalse(@Param("recipientId") String recipientId);
 
-
+    /**
+     * Performs bulk update to mark multiple messages as read atomically.
+     * Only updates messages that are currently unread.
+     *
+     * @param messageIds list of message IDs to mark as read
+     * @return number of messages updated
+     */
     @Modifying
     @Query("UPDATE Message msg SET msg.isRead = true WHERE msg.id IN :messageIds AND msg.isRead = false")
     void markMessagesAsRead(@Param("messageIds") List<Long> messageIds);
 
+
+    /**
+     * Searches messages using PostgreSQL full-text search with ranking.
+     * Uses plainto_tsquery for natural language query parsing.
+     *
+     * @param username the user to search messages for (sender or recipient)
+     * @param query the search phrase
+     * @param pageable pagination parameters
+     * @return page of messages ordered by search relevance
+     */
     @Query(value = "SELECT * FROM messages WHERE " +
             "(sender_id = :username OR recipient_id = :username) AND " +
             "search_vector @@ plainto_tsquery('simple', :query) " +
