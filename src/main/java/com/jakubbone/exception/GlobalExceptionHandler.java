@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
      *
      * @param e the illegal argument exception
      * @return error response with HTTP 400 Bad Request
-     */t
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e){
         log.error("Illegal argument exception: {}", e.getMessage());
