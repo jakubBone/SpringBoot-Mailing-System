@@ -157,6 +157,7 @@ class MessageTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.content").value("Hello  <b>bold</b> world!")); // script usunięty
     }
 
+    @Test
     void shouldReturn403_whenTryingToReadOtherUsersMessage() throws Exception {
         SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
         mockMvc.perform(post("/api/v1/messages")
