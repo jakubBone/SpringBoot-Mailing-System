@@ -22,6 +22,14 @@ public class MessageController {
         this.messageService = messageService;
     }
 
+    /**
+     * Sends a message to another user.
+     *
+     * @param req the message request containing recipient and content
+     * @param authentication the authenticated user sending the message
+     * @return the created message with HTTP 201 status
+     * @throws ResponseStatusException if recipient not found (404) or mailbox full (409)
+     */
     @PostMapping
     public ResponseEntity<MessageResponse> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
@@ -32,6 +40,13 @@ public class MessageController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * Retrieves paginated messages for the authenticated user and marks them as read.
+     *
+     * @param authentication the authenticated user
+     * @param pageable pagination parameters (page, size, sort)
+     * @return page of messages with HTTP 200 status
+     */
    @GetMapping
    public ResponseEntity<Page<MessageResponse>> readMessages(Authentication authentication, Pageable pageable) {
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
@@ -41,6 +56,14 @@ public class MessageController {
         return ResponseEntity.ok(messages);
     }
 
+    /**
+     * Marks a specific message as read.
+     *
+     * @param id the message ID
+     * @param authentication the authenticated user (must be the recipient)
+     * @return HTTP 204 No Content on success
+     * @throws ResponseStatusException if message not found (404) or access denied (403)
+     */
     @PatchMapping("/{id}/read")
     public ResponseEntity<Void> markMessageAsRead(@PathVariable Long id, Authentication authentication) {
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
@@ -50,6 +73,15 @@ public class MessageController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Searches messages by phrase using PostgreSQL full-text search.
+     *
+     * @param phrase the search query (minimum 2 characters)
+     * @param authentication the authenticated user
+     * @param pageable pagination parameters
+     * @return page of matching messages with HTTP 200 status
+     * @throws ResponseStatusException if phrase too short (400)
+     */
     @GetMapping("/search")
     public ResponseEntity<Page<MessageResponse>> searchMessages(@RequestParam String phrase, Authentication authentication, Pageable pageable){
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
