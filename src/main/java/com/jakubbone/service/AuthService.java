@@ -25,7 +25,7 @@ public class AuthService {
         this.keycloakUserService = keycloakUserService;
     }
 
-    public String registerUser(String username, String password,
+    public void registerUser(String username, String password,
                                String email, String firstName, String lastName) {
         boolean ifUserExists = keycloakUserService.existsByUsername(username);
 
