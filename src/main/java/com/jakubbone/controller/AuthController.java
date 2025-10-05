@@ -1,7 +1,9 @@
 package com.jakubbone.controller;
 
+import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.dto.RegisterRequest;
 import com.jakubbone.dto.SendMessageRequest;
+import com.jakubbone.dto.TokenResponse;
 import com.jakubbone.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,12 @@ public class AuthController {
                 req.getEmail(), req.getFirstName(), req.getLastName());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("User registered successfully. You can now login.");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest req){
+        TokenResponse response = authService.loginUser(req.getUsername(), req.getPassword());
+        return ResponseEntity.ok(response);
     }
 
 }
