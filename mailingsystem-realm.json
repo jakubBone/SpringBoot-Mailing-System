@@ -429,50 +429,6 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "809659f0-4cbd-4d87-a656-ebb27393675f",
-    "username" : "daniel",
-    "firstName" : "Daniel",
-    "lastName" : "Kowalski",
-    "email" : "daniel@spring.com",
-    "emailVerified" : true,
-    "createdTimestamp" : 1748262200033,
-    "enabled" : true,
-    "totp" : false,
-    "credentials" : [ {
-      "id" : "d34db1a1-8d37-409a-b003-0a156d3a9f21",
-      "type" : "password",
-      "createdDate" : 1748262200255,
-      "secretData" : "{\"value\":\"CgcbWsF4B4tOMCpXesi/dBUYTMBvlM8ViYfUiQX/i78=\",\"salt\":\"BKr9zSRuokvUv/WaVLgDXA==\",\"additionalParameters\":{}}",
-      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
-    } ],
-    "disableableCredentialTypes" : [ ],
-    "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-mailingsystem" ],
-    "notBefore" : 0,
-    "groups" : [ ]
-  }, {
-    "id" : "48dda7c2-061b-45fe-bf25-af9e596daccd",
-    "username" : "iwona",
-    "firstName" : "Iwona",
-    "lastName" : "Nowak",
-    "email" : "iwona@spring.com",
-    "emailVerified" : false,
-    "createdTimestamp" : 1748249165409,
-    "enabled" : true,
-    "totp" : false,
-    "credentials" : [ {
-      "id" : "142ca6d1-25dc-467a-b3c4-9dcb7363681a",
-      "type" : "password",
-      "createdDate" : 1748249165450,
-      "secretData" : "{\"value\":\"wXIdD2tPI4XsFmAAJoIWV7CT/eyZCfohA6Km9j1tCCE=\",\"salt\":\"86zZz7eQl++7qMxvJXtoRw==\",\"additionalParameters\":{}}",
-      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
-    } ],
-    "disableableCredentialTypes" : [ ],
-    "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-mailingsystem" ],
-    "notBefore" : 0,
-    "groups" : [ ]
-  }, {
     "id" : "4cdcec01-9124-4b53-a0d6-1bddb1e06ab0",
     "username" : "service-account-springboot-mailing-system",
     "emailVerified" : false,
@@ -492,9 +448,9 @@
     "groups" : [ ]
   }, {
     "id" : "587244a1-e624-4511-8d8b-e4e851940295",
-    "username" : "us",
-    "firstName" : "Test",
-    "lastName" : "User",
+    "username" : "testuser",
+    "firstName" : "test",
+    "lastName" : "user",
     "email" : "testuser@spring.com",
     "emailVerified" : true,
     "createdTimestamp" : 1747922383647,
