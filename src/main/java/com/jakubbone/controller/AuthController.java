@@ -2,7 +2,6 @@ package com.jakubbone.controller;
 
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.dto.RegisterRequest;
-import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.dto.TokenResponse;
 import com.jakubbone.service.AuthService;
 import jakarta.validation.Valid;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.function.EntityResponse;
 
 /**
  * Authentication controller for user registration and login.
@@ -40,5 +38,4 @@ public class AuthController {
         TokenResponse response = authService.loginUser(req.getUsername(), req.getPassword());
         return ResponseEntity.ok(response);
     }
-
 }
