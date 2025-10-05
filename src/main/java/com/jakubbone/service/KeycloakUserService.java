@@ -2,10 +2,13 @@ package com.jakubbone.service;
 
 import lombok.Getter;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,5 +40,23 @@ public class KeycloakUserService {
     public boolean existsByUsername(String username) {
         List<UserRepresentation> users = keycloakAdminClient.realm(keycloakRealm).users().searchByUsername(username, true);
         return users != null && !users.isEmpty();
+    }
+
+    public void assignUserRole(String userId){
+        RoleRepresentation role = getRealm()
+                .roles()
+                .get("USER")
+                .toRepresentation();
+
+        getRealm()
+            .users()
+            .get(userId)
+            .roles()
+            .realmLevel()
+            .add(Collections.singletonList(role));
+    }
+
+    public RealmResource getRealm() {
+        return keycloakAdminClient.realm(keycloakRealm);
     }
 }
