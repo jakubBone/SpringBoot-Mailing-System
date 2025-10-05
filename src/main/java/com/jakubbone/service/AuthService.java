@@ -6,6 +6,6 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     public String registerUser(String username){
-
+        return null;
     }
 }
