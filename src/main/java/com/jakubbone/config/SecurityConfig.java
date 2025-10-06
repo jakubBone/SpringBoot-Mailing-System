@@ -28,6 +28,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        // Authorization endpoints
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         // Actuator endpoints
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")

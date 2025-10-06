@@ -27,8 +27,11 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest req){
-        authService.registerUser(req.getUsername(), req.getPassword(),
-                req.getEmail(), req.getFirstName(), req.getLastName());
+        authService.registerUser(req.getUsername(),
+                req.getPassword(),
+                req.getEmail(),
+                req.getFirstName(),
+                req.getLastName());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("User registered successfully. You can now login.");
     }
