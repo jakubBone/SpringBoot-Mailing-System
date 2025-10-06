@@ -9,7 +9,6 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jakubbone.dto.RegisterRequest;
 import com.jakubbone.integration.common.AbstractIntegrationTest;
-import com.jakubbone.service.KeycloakUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;

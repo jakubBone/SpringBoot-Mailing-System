@@ -8,6 +8,7 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -22,6 +23,7 @@ import java.time.Duration;
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractIntegrationTest {
     // Shared Network in order to avoid MessageTest and ActuatorTest collision
     private static final Network NET = Network.SHARED;
@@ -110,8 +112,4 @@ public abstract class AbstractIntegrationTest {
         return keycloakClient.tokenManager().getAccessToken().getToken();
     }
 
-    @AfterAll
-    static void tearDown() {
-        NET.close();
-    }
 }
