@@ -1,14 +1,23 @@
 package com.jakubbone.service;
 
 import java.util.Collections;
+import java.util.Map;
 
 import com.jakubbone.dto.TokenResponse;
 import jakarta.ws.rs.core.Response;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -19,10 +28,18 @@ public class AuthService {
     @Value("${keycloak.admin-client-secret}")
     private String adminClientSecret;
 
-    private final KeycloakUserService keycloakUserService;
+    @Value("${${keycloak.base-url}")
+    private String keycloakBaseUrl;
 
-    public AuthService(KeycloakUserService keycloakUserService) {
+    @Value(("${keycloak.realm}"))
+    private String keycloakRealm;
+
+    private final KeycloakUserService keycloakUserService;
+    private final RestTemplate restTemplate;
+
+    public AuthService(KeycloakUserService keycloakUserService, RestTemplate restTemplate) {
         this.keycloakUserService = keycloakUserService;
+        this.restTemplate = restTemplate;
     }
 
     public void registerUser(String username, String password,
@@ -61,6 +78,37 @@ public class AuthService {
     }
 
     public TokenResponse loginUser(String username, String password){
-        return new TokenResponse(null, null, null);
+        String tokenUrl = keycloakBaseUrl + "/realms/" + keycloakRealm + "/protocol/openid-connect/token";
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client_id", adminClientId);
+        params.add("client_secret", adminClientSecret);
+        params.add("grant_type", "password");
+        params.add("username", username);
+        params.add("password", password);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, entity, Map.class);
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                String accessToken = (String) response.getBody().get("access_token");
+                int expires_in = (int) response.getBody().get("expires_in");
+                String tokenType = (String) response.getBody().get("tokenType");
+
+                return new TokenResponse(accessToken, expires_in, tokenType)
+            }
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Login failed");
+        } catch (HttpClientErrorException.Unauthorized e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+        } catch (HttpClientErrorException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Login failed: " + e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Authentication service unavailable");
+        }
     }
 }
