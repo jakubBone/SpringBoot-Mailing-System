@@ -3,6 +3,8 @@ package com.jakubbone.service;
 import java.util.Collections;
 import java.util.Map;
 
+import com.jakubbone.dto.LoginRequest;
+import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.dto.TokenResponse;
 import jakarta.ws.rs.core.Response;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -100,7 +102,7 @@ public class AuthService {
                 int expires_in = (int) response.getBody().get("expires_in");
                 String tokenType = (String) response.getBody().get("tokenType");
 
-                return new TokenResponse(accessToken, expires_in, tokenType)
+                return new TokenResponse(accessToken, expires_in, tokenType);
             }
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Login failed");
         } catch (HttpClientErrorException.Unauthorized e) {
