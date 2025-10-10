@@ -1,7 +1,6 @@
 package com.jakubbone.integration.common;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
