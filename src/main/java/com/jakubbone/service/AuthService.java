@@ -3,8 +3,6 @@ package com.jakubbone.service;
 import java.util.Collections;
 import java.util.Map;
 
-import com.jakubbone.dto.LoginRequest;
-import com.jakubbone.dto.SendMessageRequest;
 import com.jakubbone.dto.TokenResponse;
 import jakarta.ws.rs.core.Response;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -30,7 +28,7 @@ public class AuthService {
     @Value("${keycloak.admin-client-secret}")
     private String adminClientSecret;
 
-    @Value("${${keycloak.base-url}")
+    @Value("${keycloak.base-url}")
     private String keycloakBaseUrl;
 
     @Value(("${keycloak.realm}"))
