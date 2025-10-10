@@ -50,15 +50,14 @@ class AuthTest extends AbstractIntegrationTest {
 
     RegisterRequest createRegisterRequest(String username, String email, String password,
                                                   String firstName, String lastName) {
-        RegisterRequest req = new RegisterRequest();
-        req.setUsername(username);
-        req.setEmail(email);
-        req.setPassword(password);
-        req.setFirstName(firstName);
-        req.setLastName(lastName);
-        return req;
+        return new RegisterRequest(
+                username,
+                password,
+                email,
+                firstName,
+                lastName
+        );
     }
-
 
     @Test
     void shouldReturn201_whenRegisterValidUser() throws Exception {
