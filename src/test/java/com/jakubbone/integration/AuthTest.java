@@ -68,6 +68,8 @@ class AuthTest extends AbstractIntegrationTest {
         );
     }
 
+    // Registration
+
     @Test
     void shouldReturn201_whenRegisterValidUser() throws Exception {
         RegisterRequest req = createRegisterRequest(
@@ -131,6 +133,8 @@ class AuthTest extends AbstractIntegrationTest {
         cleanupTestUsers("duplicate");
     }
 
+    // Login tests
+
     @Test
     void shouldReturn200AndAccessToken_whenLoginValidCredentials() throws Exception {
         LoginRequest req = createLoginRequest("testuser", "userPassword");
@@ -144,5 +148,68 @@ class AuthTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.expireTime").isNumber());
     }
+
+    @Test
+    void shouldReturn200AndAccessToken_whenLoginAdminValidCredentials() throws Exception {
+        LoginRequest req = createLoginRequest("testadmin", "adminPassword");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.expireTime").isNumber());
+    }
+
+    @Test
+    void shouldReturn401_whenInvalidUsername() throws Exception {
+        LoginRequest req = createLoginRequest("nonexistent", "anyPassword");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid username or password"));
+    }
+
+    @Test
+    void shouldReturn401_whenInvalidPassword() throws Exception {
+        LoginRequest req = createLoginRequest("testuser", "wrongPassword");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid username or password"));
+    }
+
+    @Test
+    void shouldReturn400_whenUsernameIsBlank() throws Exception {
+        LoginRequest req = createLoginRequest("", "Password123");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid request data"));
+    }
+
+    @Test
+    void shouldReturn400_whenPasswordIsBlank() throws Exception {
+        LoginRequest req = createLoginRequest("testuser", "");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid request data"));
+    }
+
 
 }
