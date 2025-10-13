@@ -2,11 +2,13 @@ package com.jakubbone.integration;
 
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.dto.RegisterRequest;
 import com.jakubbone.integration.common.AbstractIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +58,13 @@ class AuthTest extends AbstractIntegrationTest {
                 email,
                 firstName,
                 lastName
+        );
+    }
+
+    LoginRequest createLoginRequest(String username, String password){
+        return new LoginRequest(
+                username,
+                password
         );
     }
 
@@ -121,4 +130,19 @@ class AuthTest extends AbstractIntegrationTest {
         // Cleanup
         cleanupTestUsers("duplicate");
     }
+
+    @Test
+    void shouldReturn200AndAccessToken_whenLoginValidCredentials() throws Exception {
+        LoginRequest req = createLoginRequest("testuser", "userPassword");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.expireTime").isNumber());
+    }
+
 }
