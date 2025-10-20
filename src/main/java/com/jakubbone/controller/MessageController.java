@@ -83,7 +83,7 @@ public class MessageController {
      * @return page of messages with HTTP 200 status
      */
 
-    @@Operation(
+    @Operation(
             summary = "Read messages",
             description = "Get message from logged user",
             responses = {

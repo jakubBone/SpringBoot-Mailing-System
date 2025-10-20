@@ -1,6 +1,5 @@
 package com.jakubbone.controller;
 
-
 import com.jakubbone.dto.LoginRequest;
 import com.jakubbone.dto.RegisterRequest;
 import com.jakubbone.dto.TokenResponse;
@@ -53,7 +52,7 @@ public class AuthController {
             summary = "User login",
             description = "Authenticates user and generates JWT token",
             responses = {
-                    @ApiResponse(responseCode = "201", description = "JWT token response Json")
+                    @ApiResponse(responseCode = "201", description = "JWT token response Json"),
                     @ApiResponse(responseCode = "401", description = "Invalid username or password")
             }
     )
