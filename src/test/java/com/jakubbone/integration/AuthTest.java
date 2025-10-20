@@ -211,5 +211,27 @@ class AuthTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Invalid request data"));
     }
 
+    @Test
+    void shouldReturn400_whenUsernameIsNull() throws Exception {
+        LoginRequest req = new LoginRequest();
+        req.setPassword("Password123!");
 
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400_whenPasswordIsNull() throws Exception {
+        LoginRequest req = new LoginRequest();
+        req.setUsername("testuser");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(req)))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().isBadRequest());
+    }
 }
