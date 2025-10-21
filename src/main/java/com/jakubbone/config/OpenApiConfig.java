@@ -14,12 +14,4 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .description("API documentation for mailing system"));
     }
-
-    @Bean
-    public GroupedOpenApi publicApi() {
-        return GroupedOpenApi.builder()
-                .group("public")
-                .pathsToMatch("/api/v1/**")
-                .build();
-    }
 }
