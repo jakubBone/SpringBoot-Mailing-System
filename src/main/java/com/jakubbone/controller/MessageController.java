@@ -65,6 +65,10 @@ public class MessageController {
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = ErrorResponse.class)
                             )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized - Missing or invalid JWT token"
                     )
             }
     )
@@ -103,11 +107,7 @@ public class MessageController {
                     ),
                     @ApiResponse(
                             responseCode = "401",
-                            description = "Unauthorized user",
-                            content = @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class)
-                            )
+                            description = "Unauthorized - Missing or invalid JWT token"
                     )
             }
     )
@@ -155,6 +155,10 @@ public class MessageController {
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = ErrorResponse.class)
                             )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized - Missing or invalid JWT token"
                     )
             }
     )
@@ -196,6 +200,10 @@ public class MessageController {
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = ErrorResponse.class)
                             )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized - Missing or invalid JWT token"
                     )
             }
     )
