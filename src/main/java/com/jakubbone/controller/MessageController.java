@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -68,7 +69,10 @@ public class MessageController {
             }
     )
     @PostMapping
-    public ResponseEntity<MessageResponse> sendMessage(@Valid @RequestBody SendMessageRequest req, Authentication authentication){
+    public ResponseEntity<MessageResponse> sendMessage(
+            @Valid @RequestBody SendMessageRequest req,
+            Authentication authentication){
+
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
         String sender = jwt.getToken().getClaim("preferred_username");
 
@@ -108,7 +112,10 @@ public class MessageController {
             }
     )
    @GetMapping
-   public ResponseEntity<Page<MessageResponse>> readMessages(Authentication authentication, Pageable pageable) {
+   public ResponseEntity<Page<MessageResponse>> readMessages(
+           Authentication authentication,
+           @ParameterObject Pageable pageable) {
+
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
         String recipient = jwt.getToken().getClaim("preferred_username");
 
@@ -193,7 +200,11 @@ public class MessageController {
             }
     )
     @GetMapping("/search")
-    public ResponseEntity<Page<MessageResponse>> searchMessages(@RequestParam String phrase, Authentication authentication, Pageable pageable){
+    public ResponseEntity<Page<MessageResponse>> searchMessages(
+            @RequestParam String phrase,
+            Authentication authentication,
+            @ParameterObject Pageable pageable){
+
         JwtAuthenticationToken jwt = (JwtAuthenticationToken) authentication;
         String username = jwt.getToken().getClaim("preferred_username");
 
