@@ -4,7 +4,17 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 infra/
+*.jar
 
+# Database files
+*.db
+*.mv.db
+*.sqlite
+data/h2/
+
+# Docker volumes
+postgres_data/
+EOF
 
 ### STS ###
 .apt_generated
