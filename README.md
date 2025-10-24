@@ -2,62 +2,212 @@
 
 ![](src/main/resources/image/logo.png)
 
-Currently, I’m reengineering my original Java-based 'Client-Server Mailing System' into a Spring Boot 3 REST API to to master the Spring framework
-and Hibernate (JPA) via Spring Data JPA. The new application features OAuth2/JWT authentication through Keycloak, role-based task management endpoints,
-and robust data persistence.
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
-This project is under active development.
+A RESTful messaging API demonstrating proficiency in **Spring Boot ecosystem**, 
+**OAuth2 authentication**, **database management**, and **modern DevOps practices**.
 
-## 📌 Project status
+## 🎯 Project Purpose
 
-🚧 **Work in progress** - this project is actively being developed.  
+This project showcases hands-on experience with core enterprise Java technologies
 
-- New features and improvements are added regularly
-- The `Quick start` section is only indicative - there is no packaged release or download yet  
-- Setup instructions will be refined once the project reaches a more stable stage
+## 🎯 What This Project Demonstrates
 
-## 📖 Tech stack & highlights
+**Spring Ecosystem:**
+- Spring Boot 3.4 with layered architecture
+- Spring Security OAuth2 Resource Server
+- Spring Data JPA with Hibernate
+- Spring Actuator for monitoring
 
-- **Designing and building a Spring Boot 3 REST API**
-- **Hibernate (JPA) with Spring Data JPA for ORM and transactional operations**
-- **OAuth2/JWT security with Spring Security & Keycloak**
-- **Keycloak Admin REST client for user & role management**
-- **REST controllers, DTO validation, global exception handling**
-- **Docker containerization (Dockerfile + Docker Compose) for the application and Keycloak**
-- **Flyway automatic database migrations**
-- **HTML sanitization (OWASP Java HTML Sanitizer) before storing message content**
-- **Testcontainers (Keycloak + PostgreSQL integration tests)** 
+**Database & Persistence:**
+- PostgreSQL full-text search
+- Flyway migrations for version control
+- JPA/Hibernate ORM
 
-## ✅ Continuous Integration
-This project uses **GitHub Actions** as a learning exercise.  
-Every push triggers automated build, test, and integration checks.
+**Security:**
+- Keycloak integration (OAuth2/JWT)
+- Role-based access control
+- XSS protection and input validation
+- Global exception handling
 
-## 📡 API (short overview)
-All endpoints require `Authorization: Bearer <JWT>`. Roles: `USER` / `ADMIN`.
+**Testing & DevOps:**
+- JUnit 5 with Testcontainers
+- Docker multi-container setup
+- GitHub Actions CI/CD
+- Environment-based configuration
 
-- `POST /api/v1/messages` – send a message  
-  (recipient: 3–10 letters, content: 1–256 chars; HTML sanitized)
-- `GET /api/v1/messages` – fetch your own messages (paginated)
-- `PATCH /api/v1/messages/{id}/read` – mark as read (only recipient can)
-- `GET /api/v1/messages/search?phrase=...` – full-text search in your messages (≥2 chars)
+## 🏗 Architecture
+```
+┌──────────────┐      ┌────────────────┐      ┌─────────────┐
+│   Swagger    │─────▶│  Spring Boot   │─────▶│ PostgreSQL  │
+│      UI      │      │  Application   │      │             │
+└──────────────┘      └────────────────┘      └─────────────┘
+                             │
+                             │ OAuth2/JWT
+                             ▼
+                      ┌────────────────┐
+                      │    Keycloak    │
+                      │  (Identity     │
+                      │   Provider)    │
+                      └────────────────┘
+```
 
-### Business rules examples:
-- Cannot message yourself → `400`
-- Recipient must exist in Keycloak
-- Mailbox limit (`mailbox.limit`) enforced → `409` if exceeded
+**Key Decisions:**
+- **Keycloak over custom JWT:** Production-ready, industry-standard OAuth2
+- **No user table:** Users managed by Keycloak (single source of truth)
+- **Profile-based config:** Separate properties for dev/prod/test environments
+
+## ✨ Key Features
+
+- **User Management:** Registration via Keycloak, OAuth2 authentication
+- **Messaging:** Send/receive messages, automatic read tracking
+- **Search:** PostgreSQL full-text search 
+- **Security:** JWT tokens, role-based access (USER, ADMIN)
+- **Validation:** Bean Validation, XSS protection
+- **Error Handling:** Global exception handler with structured responses
+- **Monitoring:** Spring Actuator endpoints
+- **Documentation:** Interactive Swagger UI
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Docker & Docker Compose
+
+### Setup
+
+1. **Clone and configure**
+```bash
+git clone https://github.com/jakubBone/SpringBoot-Mailing-System.git
+cd spring-boot-mailing-system
+```
+
+2. **Create `.env` file**
+```env
+SPRING_PROFILES_ACTIVE=dev
+POSTGRES_DB=spring_db
+POSTGRES_USER=spring_user
+POSTGRES_PASSWORD=spring123
+KEYCLOAK_REALM=mailingsystem
+KEYCLOAK_ADMIN_CLIENT_ID=springboot-mailing-system
+KEYCLOAK_ADMIN_CLIENT_SECRET=0HMuCpZQvov7QUl7jVASrBC9AW8nkJFZ
+KEYCLOAK_BASE_URL=http://localhost:8180
+OAUTH2_ISSUER_URI=http://localhost:8180/realms/mailingsystem
+```
+
+**⚠️ Note:** Project includes `mailingsystem-realm.json` with test credentials.
+
+3. **Start the application**
+```
+docker-compose up --build
+```
+
+Wait for initialization (~60 seconds).
+
+## 🌐 Access
+
+| Service | URL |
+|---------|-----|
+| 📖 **API Documentation** | http://localhost:8080/swagger-ui.html |
+| 🔌 **REST API** | http://localhost:8080/api/v1 |
+| ❤️ **Health Check** | http://localhost:8080/actuator/health |
+| 🔐 **Keycloak Admin** | http://localhost:8180/admin (admin/admin) |
 
 
-## 🚀 Quick start (local)
+## 📚 API Endpoints
+```bash
+# Public
+POST /api/v1/auth/register  # Register user
+POST /api/v1/auth/login     # Get JWT token
 
-> ⚠️ **Note:** This is a *draft* setup description.  
-> Since the project is in progress, there is no release or ready-to-download package yet.  
-> Instructions will evolve as the project matures.
+# Protected (USER/ADMIN)
+POST   /api/v1/messages              # Send message
+GET    /api/v1/messages              # Read messages
+PATCH  /api/v1/messages/{id}/read    # Mark as read
+GET    /api/v1/messages/search       # Full-text search
 
-1. Run **Keycloak** and **PostgreSQL** (e.g. via Docker Compose) 
-   Provide Keycloak admin client credentials:  
-   `keycloak.base-url`, `keycloak.realm`, `keycloak.admin-client-id`, `keycloak.admin-client-secret`.
-2. Set `SPRING_PROFILES_ACTIVE=dev` if you want Flyway to drop & recreate schema (dev only).
-3. Start the app:  
-   ```bash
-   ./mvnw spring-boot:run
+# Monitoring
+GET /actuator/health  # Public
+GET /actuator/**      # Admin only
+```
+
+**Complete guide with examples:** http://localhost:8080/swagger-ui.html
+
+## 🔐 Security Flow
+
+1. User registers → Keycloak creates account
+2. User logs in → Keycloak issues JWT (5-min expiration)
+3. Token sent in header: `Bearer <token>`
+4. Spring Security validates JWT on each request
+5. Access granted based on role (USER/ADMIN)
+
+
+## 🦆 Flyway Migrations
+```
+src/main/resources/db/migration/postgresql/
+├── V1__create_messages_postgres.sql        # Initial schema
+└── V2__fts_messages.sql   # FTS support
+```
+
+Migrations run automatically on startup.
+
+## 🧪 Testing
+```bash
+mvn test  # Runs all tests with Testcontainers
+```
+
+**Integration tests** use real PostgreSQL and Keycloak containers via Testcontainers.
+
+
+
+## ✅ CI/CD
+
+**GitHub Actions** runs tests on every push to `dev` branch. 
+Merges to `master` require passing tests.
+
+## 📁 Project Structure
+```
+spring-boot-mailing-system/
+├── src/
+│   ├── main/
+│   │   ├── java/com/jakubbone/
+│   │   │   ├── config/              # Security, Keycloak, OpenAPI
+│   │   │   ├── controller/          # REST endpoints
+│   │   │   ├── service/             # Business logic
+│   │   │   ├── repository/          # JPA repositories
+│   │   │   ├── model/               # Entities
+│   │   │   ├── dto/                 # Request/Response objects
+│   │   │   ├── exception/           # Global exception handler
+│   │   │   └── utils/               # Helpers (JWT converter)
+│   │   └── resources/
+│   │       ├── application.properties           # Base config
+│   │       ├── application-dev.properties       # Development
+│   │       ├── application-prod.properties      # Production
+│   │       ├── application-test.properties      # Testing
+│   │       └── db/migration/postgresql/         # Flyway migrations
+│   └── test/
+│       ├── java/                    # JUnit tests
+│       └── resources/
+│           └── test-realm.json      # Keycloak test config
+├── mailingsystem-realm.json         # Keycloak realm (dev/prod)
+├── docker-compose.yml
+├── Dockerfile
+├── pom.xml
+├── .env                             # Environment variables
+└── README.md
+```
+
+## 📄 License
+
+This project is for educational and portfolio purposes.
+
+## 👤 Author
+
+**Jakub Bone**
+
+- GitHub: [jakubBone](https://github.com/jakubbone)
+- LinkedIn: [Jakub Bone](https://linkedin.com/in/jakubbone)
+- Email: jakub.bone1990@gmail.com
 
