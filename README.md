@@ -7,7 +7,6 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
-
 A RESTful messaging API demonstrating proficiency in **Spring Boot ecosystem**, 
 **OAuth2 authentication**, **database management**, and **modern DevOps practices**.
 
@@ -15,41 +14,35 @@ A RESTful messaging API demonstrating proficiency in **Spring Boot ecosystem**,
 
 This project showcases hands-on experience with core enterprise Java technologies
 
-## 📊 Technical Highlights
+## 🎯 What This Project Demonstrates
 
-### What This Project Demonstrates
-
-**Spring Framework:**
-- Dependency injection and IoC
-- Layered architecture (Controller/Service/Repository)
+**Spring Ecosystem:**
+- Spring Boot 3.4 with layered architecture
 - Spring Security OAuth2 Resource Server
-- Spring Data JPA with custom queries
+- Spring Data JPA with Hibernate
+- Spring Actuator for monitoring
 
-**Database:**
-- JPA/Hibernate ORM
-- Flyway migrations
+**Database & Persistence:**
 - PostgreSQL full-text search
-- Database indexing for performance
+- Flyway migrations for version control
+- JPA/Hibernate ORM
 
 **Security:**
-- External identity provider integration
-- OAuth2/JWT implementation
+- Keycloak integration (OAuth2/JWT)
 - Role-based access control
-- Input validation and sanitization
+- XSS protection and input validation
+- Global exception handling
 
-**Testing:**
-- Integration tests with Testcontainers
-- Unit tests with mocks
-
-**DevOps:**
+**Testing & DevOps:**
+- JUnit 5 with Testcontainers
 - Docker multi-container setup
+- GitHub Actions CI/CD
 - Environment-based configuration
-- CI/CD with GitHub Actions
 
 ## 🏗 Architecture
 ```
 ┌──────────────┐      ┌────────────────┐      ┌─────────────┐
-│   Swagger    │─────▶│  Spring Boot   │── ──▶│ PostgreSQL  │
+│   Swagger    │─────▶│  Spring Boot   │─────▶│ PostgreSQL  │
 │      UI      │      │  Application   │      │             │
 └──────────────┘      └────────────────┘      └─────────────┘
                              │
@@ -57,32 +50,15 @@ This project showcases hands-on experience with core enterprise Java technologie
                              ▼
                       ┌────────────────┐
                       │    Keycloak    │
-                      │   (External    │
-                      │   Identity     │
+                      │  (Identity     │
                       │   Provider)    │
                       └────────────────┘
 ```
 
-### 🏗 Architectural Decisions
-
-**Layered Architecture:**
-```
-Controller → Service → Repository → Database
-```
-
-**Why Keycloak instead of custom JWT implementation?**
-- Production-ready identity management solution
-- Industry-standard OAuth2/OpenID Connect
-- Demonstrates ability to integrate external services
-
-**Why no user table in the database?**
-- Users are managed entirely by Keycloak
-
-**Profile-based configuration:**
-- `application.properties` - Base configuration
-- `application-dev.properties` - Development (debug logs, Flyway clean enabled)
-- `application-prod.properties` - Production (restricted endpoints, Flyway clean disabled)
-- `application-test.properties` - Testing (Testcontainers, in-memory setup)
+**Key Decisions:**
+- **Keycloak over custom JWT:** Production-ready, industry-standard OAuth2
+- **No user table:** Users managed by Keycloak (single source of truth)
+- **Profile-based config:** Separate properties for dev/prod/test environments
 
 ## ✨ Key Features
 
@@ -98,45 +74,30 @@ Controller → Service → Repository → Database
 ## 🚀 Quick Start
 
 ### Prerequisites
-
-- Docker
-- Docker Compose
+- Docker & Docker Compose
 
 ### Setup
 
-1. **Clone the repository**
-```
+1. **Clone and configure**
+```bash
 git clone https://github.com/jakubBone/SpringBoot-Mailing-System.git
 cd spring-boot-mailing-system
 ```
 
-2. **Configure environment variables**
-
-Create a `.env` file in the project root:
+2. **Create `.env` file**
 ```env
-# ----- Profile (dev/prod)
 SPRING_PROFILES_ACTIVE=dev
-
-# ----- PostgreSQL
 POSTGRES_DB=spring_db
 POSTGRES_USER=spring_user
 POSTGRES_PASSWORD=spring123
-
-# ----- Keycloak
-KEYCLOAK_ADMIN=admin
-KEYCLOAK_ADMIN_PASSWORD=admin
 KEYCLOAK_REALM=mailingsystem
 KEYCLOAK_ADMIN_CLIENT_ID=springboot-mailing-system
 KEYCLOAK_ADMIN_CLIENT_SECRET=0HMuCpZQvov7QUl7jVASrBC9AW8nkJFZ
-
 KEYCLOAK_BASE_URL=http://localhost:8180
 OAUTH2_ISSUER_URI=http://localhost:8180/realms/mailingsystem
 ```
 
-**⚠️ Important:**
-- The project includes `mailingsystem-realm.json` with pre-configured realm settings
-- For testing purposes, the provided client secret is: `0HMuCpZQvov7QUl7jVASrBC9AW8nkJFZ`
-- `test-realm.json` is used by integration tests only
+**⚠️ Note:** Project includes `mailingsystem-realm.json` with test credentials.
 
 3. **Start the application**
 ```
@@ -145,83 +106,66 @@ docker-compose up --build
 
 Wait for initialization (~60 seconds).
 
-## 🌐 Access Points
+## 🌐 Access
 
-| Service | URL | Notes |
-|---------|-----|-------|
-| **API Documentation** | http://localhost:8080/swagger-ui.html | Complete testing guide |
-| REST API | http://localhost:8080/api/v1 | Base endpoint |
-| Health Check | http://localhost:8080/actuator/health | Monitoring |
-| Keycloak Admin | http://localhost:8180/admin | admin / admin |
+| Service | URL |
+|---------|-----|
+| 📖 **API Documentation** | http://localhost:8080/swagger-ui.html |
+| 🔌 **REST API** | http://localhost:8080/api/v1 |
+| ❤️ **Health Check** | http://localhost:8080/actuator/health |
+| 🔐 **Keycloak Admin** | http://localhost:8180/admin (admin/admin) |
 
 
-## 📚 API Overview
+## 📚 API Endpoints
 ```bash
-# Authentication (Public)
-POST /api/v1/auth/register  # Register new user
+# Public
+POST /api/v1/auth/register  # Register user
 POST /api/v1/auth/login     # Get JWT token
 
-# Messages (Protected - USER/ADMIN)
+# Protected (USER/ADMIN)
 POST   /api/v1/messages              # Send message
-GET    /api/v1/messages              # Read messages (paginated)
+GET    /api/v1/messages              # Read messages
 PATCH  /api/v1/messages/{id}/read    # Mark as read
 GET    /api/v1/messages/search       # Full-text search
 
 # Monitoring
-GET /actuator/health        # Health status (public)
-GET /actuator/info          # App info (public)
-GET /actuator/**            # Metrics (admin only)
+GET /actuator/health  # Public
+GET /actuator/**      # Admin only
 ```
 
-**📖 Full testing guide:** http://localhost:8080/swagger-ui.html
+**Complete guide with examples:** http://localhost:8080/swagger-ui.html
 
-## 🔐 Security Implementation
+## 🔐 Security Flow
 
-### OAuth2 Flow
+1. User registers → Keycloak creates account
+2. User logs in → Keycloak issues JWT (5-min expiration)
+3. Token sent in header: `Bearer <token>`
+4. Spring Security validates JWT on each request
+5. Access granted based on role (USER/ADMIN)
 
-1. User registers via `/api/v1/auth/register`
-2. User authenticates through Keycloak (OAuth2 Password Grant)
-3. Keycloak issues JWT token (5-minute expiration)
-4. Token included in Authorization header: `Bearer <token>`
-5. Spring Security validates token on each request
-6. Access granted based on role (USER, ADMIN)
 
-### Security Features
-
-- **OAuth2 Resource Server** - JWT token validation
-- **Keycloak Integration** - External identity provider
-- **Role-Based Access Control** - Method-level security
-- **Global Exception Handler** - Consistent error responses
-- **Input Validation** - Bean Validation (@Valid)
-- **XSS Protection** - HTML sanitization (OWASP Java HTML Sanitizer)
-- **SQL Injection Prevention** - JPA/Hibernate parameterized queries
-
-### Flyway Migrations
+## 🦆 Flyway Migrations
 ```
 src/main/resources/db/migration/postgresql/
-├── V1__create_messages.sql        # Initial schema
-└── V2__add_full_text_search.sql   # FTS support
+├── V1__create_messages_postgres.sql        # Initial schema
+└── V2__fts_messages.sql   # FTS support
 ```
 
 Migrations run automatically on startup.
 
 ## 🧪 Testing
-
-### Running Tests
-```
-mvn test
+```bash
+mvn test  # Runs all tests with Testcontainers
 ```
 
-### Testcontainers
-
-Integration tests use **Testcontainers** for:
-- PostgreSQL (real database)
-- Keycloak (real OAuth2 provider)
+**Integration tests** use real PostgreSQL and Keycloak containers via Testcontainers.
 
 
-## ✅ Continuous Integration
-This project uses **GitHub Actions**. 
-Every push triggers automated build, test, and integration checks.
+
+## ✅ CI/CD
+
+**GitHub Actions** runs tests on every push to `dev` branch. 
+Merges to `master` require passing tests.
 
 ## 📁 Project Structure
 ```
@@ -254,8 +198,6 @@ spring-boot-mailing-system/
 ├── .env                             # Environment variables
 └── README.md
 ```
-
-
 
 ## 📄 License
 
