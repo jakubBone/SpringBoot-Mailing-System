@@ -66,10 +66,39 @@ public class AuthService {
         user.setCredentials(Collections.singletonList(credential));
 
         try (Response response = keycloakUserService.getRealm().users().create(user)) {
-            String locationHeader = response.getHeaderString("Location");
-            if (locationHeader != null) {
-                String userId = locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
-                keycloakUserService.assignUserRole(userId);
+            // Check if status 2xx (SUCCESSFUL)
+            if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+                // Success -> looking for header Location
+                String locationHeader = response.getHeaderString("Location");
+                if (locationHeader != null) {
+                    String userId = locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
+                    keycloakUserService.assignUserRole(userId);
+                } else {
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Registration successful but Location header was missing.");
+                }
+            } else {
+                // ERROR - Keycloak return status 4xx lub 5xx
+                // Read error details from Keycloak
+                String errorBody = response.hasEntity() ? response.readEntity(String.class) : "No error details";
+
+                // Default set as CONFLICT
+                HttpStatus springStatus = HttpStatus.CONFLICT;
+                String errorMessage = "Registration failed";
+
+                // Find reason error basis on response
+                if (response.getStatus() == 409) {
+                    if (errorBody.toLowerCase().contains("email")) {
+                        errorMessage = "User with this email already exists";
+                    } else if (errorBody.toLowerCase().contains("username")) {
+                        errorMessage = "User with this username already exists";
+                    } else {
+                        errorMessage = "Conflict: " + errorBody;
+                    }
+                } else {
+                    springStatus = HttpStatus.BAD_REQUEST;
+                    errorMessage = "Invalid registration data: " + errorBody;
+                }
+                throw new ResponseStatusException(springStatus, errorMessage);
             }
         }
         catch (Exception e) {
