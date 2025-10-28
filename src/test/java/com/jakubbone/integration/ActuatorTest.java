@@ -90,7 +90,7 @@ class ActuatorTest extends AbstractIntegrationTest {
     void shouldReturn403_whenUserTriesToAccessMetrics() throws Exception {
         mockMvc.perform(get("/actuator/metrics/process.uptime"))
                 .andDo(print())
-                .andExpect(status().isForbidden()); // USER role can't access metrics
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -106,14 +106,14 @@ class ActuatorTest extends AbstractIntegrationTest {
     void shouldReturn403_whenUserTriesToShutdown() throws Exception {
         mockMvc.perform(post("/actuator/shutdown"))
                 .andDo(print())
-                .andExpect(status().isForbidden()); // USER can't shutdown
+                .andExpect(status().isForbidden());
     }
 
     @Test
     void shouldReturn401_whenAccessingMetricsWithoutAuth() throws Exception {
         mockMvc.perform(get("/actuator/metrics/process.uptime"))
                 .andDo(print())
-                .andExpect(status().isUnauthorized()); // No token = 401
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -127,6 +127,6 @@ class ActuatorTest extends AbstractIntegrationTest {
     void shouldReturn401_whenShutdownWithoutAuth() throws Exception {
         mockMvc.perform(post("/actuator/shutdown"))
                 .andDo(print())
-                .andExpect(status().isUnauthorized()); // No token = 401
+                .andExpect(status().isUnauthorized());
     }
 }
