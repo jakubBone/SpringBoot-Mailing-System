@@ -44,12 +44,26 @@ public class AuthService {
 
     public void registerUser(String username, String password,
                                String email, String firstName, String lastName) {
-        boolean ifUserExists = keycloakUserService.existsByUsername(username);
 
+        boolean ifUserExists = keycloakUserService.existsByUsername(username);
         if (ifUserExists) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User already exists: " + username);
         }
 
+        UserRepresentation user = createUserRepresentation(username, password, email,
+                                                            firstName, lastName);
+
+        try (Response response = keycloakUserService.getRealm().users().create(user)) {
+            handleKeycloakResponse(response);
+        } catch (ResponseStatusException e){
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+        }
+    }
+
+    private UserRepresentation createUserRepresentation(String username, String password, String email,
+                                                        String firstName, String lastName ){
         UserRepresentation user = new UserRepresentation();
         user.setUsername(username);
         user.setEmail(email);
@@ -64,46 +78,41 @@ public class AuthService {
         credential.setTemporary(false);
 
         user.setCredentials(Collections.singletonList(credential));
+        return user;
+    }
 
-        try (Response response = keycloakUserService.getRealm().users().create(user)) {
-            // Check if status 2xx (SUCCESSFUL)
-            if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
-                // Success -> looking for header Location
-                String locationHeader = response.getHeaderString("Location");
-                if (locationHeader != null) {
-                    String userId = locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
-                    keycloakUserService.assignUserRole(userId);
-                } else {
-                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Registration successful but Location header was missing.");
-                }
-            } else {
-                // ERROR - Keycloak return status 4xx lub 5xx
-                // Read error details from Keycloak
-                String errorBody = response.hasEntity() ? response.readEntity(String.class) : "No error details";
-
-                // Default set as CONFLICT
-                HttpStatus springStatus = HttpStatus.CONFLICT;
-                String errorMessage = "Registration failed";
-
-                // Find reason error basis on response
-                if (response.getStatus() == 409) {
-                    if (errorBody.toLowerCase().contains("email")) {
-                        errorMessage = "User with this email already exists";
-                    } else if (errorBody.toLowerCase().contains("username")) {
-                        errorMessage = "User with this username already exists";
-                    } else {
-                        errorMessage = "Conflict: " + errorBody;
-                    }
-                } else {
-                    springStatus = HttpStatus.BAD_REQUEST;
-                    errorMessage = "Invalid registration data: " + errorBody;
-                }
-                throw new ResponseStatusException(springStatus, errorMessage);
+    private void handleKeycloakResponse(Response response) {
+        // Handle SUCCESS (2xx)
+        if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+            String locationHeader = response.getHeaderString("Location");
+            if (locationHeader == null) {
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Registration successful but Location header was missing"
+                );
             }
+            String userId = locationHeader.substring(locationHeader.lastIndexOf('/') + 1);
+            keycloakUserService.assignUserRole(userId);
+            return;
         }
-        catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Registration failed: " + e.getMessage());
+
+        // Handle error
+        String errorBody = response.hasEntity()
+                ? response.readEntity(String.class)
+                : "No error details";
+
+        // Handle CONFLICT (409) - parse details
+        if (response.getStatus() == 409) {
+            String errorLower = errorBody.toLowerCase();
+            if (errorLower.contains("email")) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists");
+            }
+            if (errorLower.contains("username")) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this username already exists");
+            }
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Conflict: " + errorBody);
         }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid registration data: " + errorBody);
     }
 
     public TokenResponse loginUser(String username, String password){
