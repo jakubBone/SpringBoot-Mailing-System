@@ -24,6 +24,13 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
      */
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
+        // Keycloak stores realm-level roles in JWT token under nested structure:
+        // {
+        //   "realm_access": {
+        //     "roles": ["USER", "ADMIN"]
+        //   }
+        // }
+        // Extraction this to convert to Spring Security authorities
         Map<String, Object> realmAccess = (Map<String, Object>) jwt.getClaims().get("realm_access");
         if (realmAccess == null || realmAccess.isEmpty()) {
             return Collections.emptyList();
@@ -31,6 +38,9 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
         List<String> roles = (List<String>) realmAccess.get("roles");
         if (roles == null) return Collections.emptyList();
 
+        // Spring Security requires "ROLE_" prefix for role-based authorization
+        // Example: Keycloak role "USER" becomes "ROLE_USER" in Spring Security
+        // This allows using @PreAuthorize("hasRole('USER')") without the prefix
         return roles.stream()
                 .map(role -> "ROLE_" + role)
                 .map(SimpleGrantedAuthority::new)

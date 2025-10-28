@@ -16,8 +16,9 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // Stateless REST API using JWT tokens only (no cookies/session)
-        // CSRF protection disabled to avoid 403 errors on state-changing requests
+        // CSRF protection is disabled because this is a stateless REST API using JWT tokens
+        // CSRF attacks target cookie-based authentication, which we don't use
+        // All authentication is done via Authorization header with Bearer token
         http.csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()

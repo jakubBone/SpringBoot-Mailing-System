@@ -54,6 +54,7 @@ public class MessageService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid recipient:" + recipient);
         }
 
+        // Prevents race condition in concurrent message sending
         synchronized (mailboxLock) {
             long messageCount = messageRepository.countByRecipientIdAndIsReadFalse(recipient);
 
@@ -87,6 +88,7 @@ public class MessageService {
         Page<Message> messages = messageRepository.findByRecipientId(recipientId, pageable);
 
         if (!messages.isEmpty()) {
+            // Extract only unread message IDs to avoid unnecessary database updates
             List<Long> unreadMessageIds = messages.getContent().stream()
                     .filter(msg -> !msg.isRead())
                     .map(Message::getId)

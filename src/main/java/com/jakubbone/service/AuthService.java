@@ -84,6 +84,8 @@ public class AuthService {
     private void handleKeycloakResponse(Response response) {
         // Handle SUCCESS (2xx)
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+            // Keycloak returns the created user ID in the Location header
+            // Extract the UUID at the end to assign the USER role to the newly created user
             String locationHeader = response.getHeaderString("Location");
             if (locationHeader == null) {
                 throw new ResponseStatusException(
@@ -101,7 +103,8 @@ public class AuthService {
                 ? response.readEntity(String.class)
                 : "No error details";
 
-        // Handle CONFLICT (409) - parse details
+        // Handle CONFLICT (409)
+        // Parse the error message to provide user-friendly feedback
         if (response.getStatus() == 409) {
             String errorLower = errorBody.toLowerCase();
             if (errorLower.contains("email")) {
