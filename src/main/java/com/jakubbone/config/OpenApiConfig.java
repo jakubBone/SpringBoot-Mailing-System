@@ -32,15 +32,15 @@ public class OpenApiConfig {
                             **Scenario 1: With new user registration**
                             1. Register new user "johndoe": POST /api/v1/auth/register
                             2. Authorize as "johndoe"
-                            3. Send message to "adminuser"
+                            3. Send message to "admin"
                             4. Logout
-                            5. Authorize as "adminuser"
+                            5. Authorize as "admin"
                             6. Read messages from "johndoe"
                             7. Reply to "johndoe"
                             
                             **Scenario 2: Using pre-configured users**
-                            1. Authorize as "adminuser" with password "java10"
-                            2. Send message "hello user!" to "testuser": POST /api/v1/messages
+                            1. Authorize as "admin" with password "java10"
+                            2. Send message "hello admin!" to "testuser": POST /api/v1/messages
                             3. Logout 
                             4. Authorize as "testuser" with password "java10"
                             5. Read messages: GET /api/v1/messages
@@ -54,7 +54,7 @@ public class OpenApiConfig {
                             
                             **Pre-configured accounts:**
                             - **testuser** / userPassword = "java10"
-                            - **adminuser**/ userPassword = "java10"
+                            - **admin**/ userPassword = "java10"
                             
                             ## Features
                             
