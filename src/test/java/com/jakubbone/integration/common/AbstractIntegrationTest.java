@@ -24,7 +24,9 @@ import java.time.Duration;
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractIntegrationTest {
-    // Shared Network in order to avoid MessageTest and ActuatorTest collision
+
+    // TestContainers shared network allows Keycloak to connect to PostgreSQL container
+    // Without this, Keycloak initialization would fail with connection error
     private static final Network NET = Network.SHARED;
 
     @Container
@@ -61,6 +63,9 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+
+        // Flyway disabled because schema is created automatically by Hibernate in tests
+        // (spring.jpa.hibernate.ddl-auto=create-drop in test profile)
         registry.add("spring.flyway.enabled", () -> "false");
 
         String authServerUrl = keycloak.getAuthServerUrl();
@@ -85,7 +90,9 @@ public abstract class AbstractIntegrationTest {
                 .password("admin")
                 .build();
 
-        // Reset password because Keycloak stores it as a hash
+        // Password reset required because Keycloak imports users from test-realm.json
+        // with hashed passwords that don't match test passwords
+        // UUIDs are hardcoded from test-realm.json for reliable test data
         resetUserPassword(adminClient, "a7d68651-6850-4fee-94d0-836c11117754", "adminPassword"); // 'admin'
         resetUserPassword(adminClient, "587244a1-e624-4511-8d8b-e4e851940295", "userPassword"); // 'testuser'
     }

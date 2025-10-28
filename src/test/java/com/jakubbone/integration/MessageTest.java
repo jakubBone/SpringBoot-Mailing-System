@@ -49,7 +49,10 @@ class MessageTest extends AbstractIntegrationTest {
     @BeforeEach
     void setup() {
         messageRepository.deleteAll();
+        // Reset ID sequence for predictable IDs (1,2,3...) in assertions
         jdbcTemplate.execute("ALTER TABLE messages ALTER COLUMN id RESTART WITH 1");
+
+        // Flyway disabled in tests, so we manually create search_vector column and index
         jdbcTemplate.execute("ALTER TABLE messages ADD COLUMN IF NOT EXISTS search_vector tsvector GENERATED ALWAYS AS (to_tsvector('simple', content)) STORED");
         jdbcTemplate.execute("CREATE INDEX IF NOT EXISTS idx_messages_search_vector ON messages USING GIN (search_vector)");
         adminToken = getJwtToken(admin, "adminPassword");
@@ -229,6 +232,8 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
+    // @Transactional required because test verifies database state
+    // countByRecipientIdAndIsReadFalse queries within the same transaction context
     void shouldReturnTrue_whenMessagesMarkedAsRead() throws Exception {
         SendMessageRequest req = createMessageRequest("testuser", "Hello testuser!");
 
