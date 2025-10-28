@@ -98,7 +98,6 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     void shouldReturn400_whenRecipientUsernameInvalid() throws Exception {
-        // Username too short
         SendMessageRequest req = createMessageRequest("ab", "Hello user!");
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -106,7 +105,6 @@ class MessageTest extends AbstractIntegrationTest {
                         .content(mapper.writeValueAsBytes(req)))
                 .andExpect(status().isBadRequest());
 
-        // Username too long
         req = createMessageRequest("verylongusername", "Hello user!");
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -114,7 +112,6 @@ class MessageTest extends AbstractIntegrationTest {
                         .content(mapper.writeValueAsBytes(req)))
                 .andExpect(status().isBadRequest());
 
-        // Username with special characters
         req = createMessageRequest("user123", "Hello user!");
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -199,7 +196,6 @@ class MessageTest extends AbstractIntegrationTest {
     void shouldReturn409_whenMailboxFull() throws Exception {
         SendMessageRequest req = createMessageRequest(user, "Hello testuser!");
 
-        // Send maximum number of messages
         for(int i = 0; i < mailboxLimit; i++){
             mockMvc.perform(post("/api/v1/messages")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -209,7 +205,6 @@ class MessageTest extends AbstractIntegrationTest {
                     .andExpect(status().isCreated());
         }
 
-        // Send one more message when mailbox overloaded
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -234,11 +229,9 @@ class MessageTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    // The service method countByRecipientIdAndIsReadFalse() call needs the annotation @Transactional
     void shouldReturnTrue_whenMessagesMarkedAsRead() throws Exception {
         SendMessageRequest req = createMessageRequest("testuser", "Hello testuser!");
 
-        // Send by admin
         for(int i = 0; i < 3; i++){
             mockMvc.perform(post("/api/v1/messages")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
@@ -248,7 +241,6 @@ class MessageTest extends AbstractIntegrationTest {
                     .andExpect(status().isCreated());
         }
 
-        // Read by user
         for(int i = 1; i <= 3; i++){
             mockMvc.perform(patch("/api/v1/messages/" + i + "/read")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
@@ -292,7 +284,6 @@ class MessageTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.last").value(true));
     }
 
-    // Searching test: edge cases
     @Test
     void shouldReturn400_whenSearchPhraseIsEmpty() throws Exception {
         mockMvc.perform(get("/api/v1/messages/search")
@@ -342,14 +333,12 @@ class MessageTest extends AbstractIntegrationTest {
     void shouldReturn200_andPageOfMessages_whenSearchingForMessages() throws Exception {
         SendMessageRequest req = createMessageRequest(admin, "Hello testadmin!");
 
-        // Send by user
         mockMvc.perform(post("/api/v1/messages")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req)))
                 .andExpect(status().isCreated());
 
-        // Search by user
         mockMvc.perform(get("/api/v1/messages/search")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .param("phrase", "testadmin"))
@@ -358,7 +347,6 @@ class MessageTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].content").value("Hello testadmin!"));
 
-        // Search by admin
         mockMvc.perform(get("/api/v1/messages/search")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
                         .param("phrase", "testadmin"))
@@ -386,6 +374,3 @@ class MessageTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.totalElements").value(0));
     }
 }
-
-
-

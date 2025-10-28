@@ -58,8 +58,6 @@ class ActuatorTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.app.version").value("0.0.1-SNAPSHOT"));
     }
 
-    // Protected endpoints - ADMIN role tests
-
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldReturnUptimeMetric_whenAdminAuthenticated() throws Exception {
@@ -87,8 +85,6 @@ class ActuatorTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$._links.metrics").exists());
     }
 
-    // USER role tests - should get 403 Forbidden
-
     @Test
     @WithMockUser(roles = "USER")
     void shouldReturn403_whenUserTriesToAccessMetrics() throws Exception {
@@ -112,8 +108,6 @@ class ActuatorTest extends AbstractIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isForbidden()); // USER can't shutdown
     }
-
-    // No authentication tests - should get 401 Unauthorized
 
     @Test
     void shouldReturn401_whenAccessingMetricsWithoutAuth() throws Exception {

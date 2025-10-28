@@ -68,8 +68,6 @@ class AuthTest extends AbstractIntegrationTest {
         );
     }
 
-    // Registration
-
     @Test
     void shouldReturn201_whenRegisterValidUser() throws Exception {
         RegisterRequest req = createRegisterRequest(
@@ -80,14 +78,12 @@ class AuthTest extends AbstractIntegrationTest {
                 "user"
         );
 
-        // Register user
         mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsBytes(req)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isCreated());
 
-        // Verify user exists in Keycloak
         List<UserRepresentation> users = keycloakAdminClient
                 .realm("test")
                 .users()
@@ -107,13 +103,11 @@ class AuthTest extends AbstractIntegrationTest {
                 "User"
         );
 
-        // First registration
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req1)))
                 .andExpect(status().isCreated());
 
-        // Try to register with same username
         RegisterRequest req2 = createRegisterRequest(
                 "duplicate",  // Same username
                 "second@example.com",
@@ -122,18 +116,14 @@ class AuthTest extends AbstractIntegrationTest {
                 "User"
         );
 
-        // Second registration
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsBytes(req2)))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isConflict());
 
-        // Cleanup
         cleanupTestUsers("duplicate");
     }
-
-    // Login tests
 
     @Test
     void shouldReturn200AndAccessToken_whenLoginValidCredentials() throws Exception {
