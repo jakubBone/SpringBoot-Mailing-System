@@ -190,7 +190,7 @@ spring-boot-mailing-system/
 │   │       ├── application-test.properties      # Testing
 │   │       └── db/migration/postgresql/         # Flyway migrations
 │   └── test/
-│       ├── java/                    # JUnit tests
+│       ├── java/                    # Unit and integration 
 │       └── resources/
 │           └── test-realm.json      # Keycloak test config
 ├── mailingsystem-realm.json         # Keycloak realm (dev/prod)
