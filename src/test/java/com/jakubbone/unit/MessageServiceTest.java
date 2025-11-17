@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -19,6 +20,7 @@ import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,19 +34,43 @@ class MessageServiceTest {
     @InjectMocks
     MessageService messageService;
 
+
     @Test
-    void shouldThrowException_whenSendingToSelf() {
+    void shouldSendMessage_whenValidRequest() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
         String sender = "testuser";
-        String recipient = "testuser";
+        String recipient = "recipient";
+        String content = "hello";
+
+        when(keycloakUserService.existsByUsername(recipient)).thenReturn(true);
+        when(messageRepository.countByRecipientIdAndIsReadFalse(recipient)).thenReturn(1L);
+        when(messageRepository.save(any(Message.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Message result = messageService.send(sender, recipient, content);
+
+        assertNotNull(result);
+        assertEquals(sender, result.getSenderId());
+        assertEquals(recipient, result.getRecipientId());
+        assertEquals(content, result.getContent());
+        assertFalse(result.isRead());
+    }
+
+    @Test
+    void shouldSendMessage_whenMailboxAlmostFull() {
+        ReflectionTestUtils.setField(messageService, "mailboxLimit", 5);
+
+        String sender = "testuser";
+        String recipient = "recipient";
         String content = "Hello";
 
-        ResponseStatusException ex = assertThrows(
-                ResponseStatusException.class,
-                () -> messageService.send(sender, recipient, content)
-        );
+        when(keycloakUserService.existsByUsername(recipient)).thenReturn(true);
+        when(messageRepository.countByRecipientIdAndIsReadFalse(recipient)).thenReturn(4L); // 4 z 5
+        when(messageRepository.save(any(Message.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        assertEquals("Cannot send message to yourself", ex.getReason());
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        Message result = messageService.send(sender, recipient, content);
+
+        assertNotNull(result);
     }
 
     @Test
@@ -66,6 +92,40 @@ class MessageServiceTest {
         assertEquals("Cannot send message: Recipient's mailbox is full", ex.getReason());
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
     }
+
+    @Test
+    void shouldThrowException_whenRecipientDoesNotExist() {
+        String sender = "testuser";
+        String recipient = "non-existent";
+        String content = "hello";
+
+        when(keycloakUserService.existsByUsername(recipient)).thenReturn(false);
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.send(sender, recipient, content)
+        );
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("Invalid recipient:" + recipient));
+    }
+
+    @Test
+    void shouldThrowException_whenSendingToSelf() {
+        String sender = "testuser";
+        String recipient = "testuser";
+        String content = "Hello";
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> messageService.send(sender, recipient, content)
+        );
+
+        assertEquals("Cannot send message to yourself", ex.getReason());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+
 
     @Test
     void shouldSanitizeContent_whenSendingMessage() {
@@ -124,6 +184,22 @@ class MessageServiceTest {
     }
 
     @Test
+    void shouldSearchMessages_whenValidPhrase() {
+        String username = "testuser";
+        String searchPhrase = "hello";
+        Pageable pageable = Pageable.unpaged();
+
+        Page<Message> expectedPage = Page.empty();
+        when(messageRepository.searchMessages(username, searchPhrase, pageable))
+                .thenReturn(expectedPage);
+
+        Page<Message> result = messageService.searchMessages(username, searchPhrase, pageable);
+
+        assertNotNull(result);
+        verify(messageRepository).searchMessages(username, searchPhrase, pageable);
+    }
+
+    @Test
     void shouldThrowException_whenSearchPhraseEmpty() {
         ResponseStatusException ex = assertThrows(
                 ResponseStatusException.class,
@@ -143,4 +219,6 @@ class MessageServiceTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
     }
+
+
 }
